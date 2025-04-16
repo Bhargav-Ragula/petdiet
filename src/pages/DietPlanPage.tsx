@@ -11,7 +11,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Loader2, AlertTriangle, PawPrint, Activity, Apple, Heart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const petTypes = ["Dog", "Cat", "Bird", "Fish", "Hamster", "Rabbit", "Other"];
@@ -87,156 +87,212 @@ const DietPlanPage = () => {
   };
 
   return (
-    <div className="py-6 space-y-6 max-w-3xl mx-auto">
-      <div className="flex items-center">
+    <div className="py-8 max-w-4xl mx-auto px-4 sm:px-6">
+      <div className="flex items-center mb-8">
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="mr-2">
           <ArrowLeft size={20} />
         </Button>
-        <h1 className="text-2xl font-bold text-foreground">
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
           AI Pet Diet Plan
         </h1>
       </div>
 
       {!dietPlan ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Enter Your Pet's Details</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="petType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Pet Type</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select pet type" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {petTypes.map((type) => (
-                            <SelectItem key={type} value={type}>
-                              {type}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="breed"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Breed</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter breed" {...field} />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-
-                <div className="grid grid-cols-2 gap-4">
+        <div className="grid gap-6 md:grid-cols-5">
+          <div className="md:col-span-2 space-y-4">
+            <Card className="bg-gradient-to-br from-background to-muted border-0 shadow-lg">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-xl">
+                  <PawPrint className="h-5 w-5 text-primary" />
+                  Why Diet Matters
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  A tailored diet plan ensures your pet gets the right nutrition 
+                  based on their specific needs, promoting better health, energy,
+                  and longevity.
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gradient-to-br from-background to-muted border-0 shadow-lg">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-xl">
+                  <Activity className="h-5 w-5 text-secondary" />
+                  Activity & Nutrition
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  Active pets need more calories and protein, while less active 
+                  ones require fewer calories to maintain a healthy weight.
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gradient-to-br from-background to-muted border-0 shadow-lg">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-xl">
+                  <Apple className="h-5 w-5 text-green-500" />
+                  Balanced Diet Benefits
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  A balanced diet helps prevent obesity, supports the immune system,
+                  promotes healthy skin and coat, and reduces the risk of digestive issues.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+          
+          <Card className="md:col-span-3 border-0 shadow-lg bg-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Heart className="h-5 w-5 text-primary" />
+                Enter Your Pet's Details
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                   <FormField
                     control={form.control}
-                    name="age"
+                    name="petType"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Age (Years)</FormLabel>
-                        <FormControl>
-                          <Input type="number" placeholder="Enter age" {...field} />
-                        </FormControl>
+                        <FormLabel>Pet Type</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="bg-background">
+                              <SelectValue placeholder="Select pet type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {petTypes.map((type) => (
+                              <SelectItem key={type} value={type}>
+                                {type}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </FormItem>
                     )}
                   />
 
                   <FormField
                     control={form.control}
-                    name="weight"
+                    name="breed"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Weight (lbs)</FormLabel>
+                        <FormLabel>Breed</FormLabel>
                         <FormControl>
-                          <Input type="number" placeholder="Enter weight" {...field} />
+                          <Input placeholder="Enter breed" {...field} className="bg-background" />
                         </FormControl>
                       </FormItem>
                     )}
                   />
-                </div>
 
-                <FormField
-                  control={form.control}
-                  name="activityLevel"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Activity Level</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="age"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Age (Years)</FormLabel>
+                          <FormControl>
+                            <Input type="number" placeholder="Enter age" {...field} className="bg-background" />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="weight"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Weight (lbs)</FormLabel>
+                          <FormControl>
+                            <Input type="number" placeholder="Enter weight" {...field} className="bg-background" />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="activityLevel"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Activity Level</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="bg-background">
+                              <SelectValue placeholder="Select activity level" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {activityLevels.map((level) => (
+                              <SelectItem key={level} value={level}>
+                                {level}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="dietaryRestrictions"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Dietary Restrictions/Special Notes</FormLabel>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select activity level" />
-                          </SelectTrigger>
+                          <Textarea 
+                            placeholder="Any allergies, health concerns, or preferences? (optional)" 
+                            className="resize-none bg-background" 
+                            {...field} 
+                          />
                         </FormControl>
-                        <SelectContent>
-                          {activityLevels.map((level) => (
-                            <SelectItem key={level} value={level}>
-                              {level}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )}
-                />
+                        <FormDescription>
+                          Include any allergies, health concerns or preferences your pet has
+                        </FormDescription>
+                      </FormItem>
+                    )}
+                  />
 
-                <FormField
-                  control={form.control}
-                  name="dietaryRestrictions"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Dietary Restrictions/Special Notes</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Any allergies, health concerns, or preferences? (optional)" 
-                          className="resize-none" 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Include any allergies, health concerns or preferences your pet has
-                      </FormDescription>
-                    </FormItem>
-                  )}
-                />
-
-                <Button 
-                  type="submit" 
-                  className="w-full" 
-                  disabled={isGenerating}
-                >
-                  {isGenerating ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Generating Diet Plan...
-                    </>
-                  ) : (
-                    "Generate Diet Plan"
-                  )}
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
+                  <Button 
+                    type="submit" 
+                    className="w-full font-semibold"
+                    disabled={isGenerating}
+                  >
+                    {isGenerating ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Generating Diet Plan...
+                      </>
+                    ) : (
+                      "Generate Diet Plan"
+                    )}
+                  </Button>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+        </div>
       ) : (
-        <Card>
-          <CardHeader>
+        <Card className="border-0 shadow-lg overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-primary/10 to-secondary/10">
             <CardTitle className="flex items-center justify-between">
-              <span>Your Pet's Diet Plan</span>
+              <span className="flex items-center gap-2">
+                <PawPrint className="h-5 w-5 text-primary" />
+                Your Pet's Diet Plan
+              </span>
               {isFromFallback && (
                 <div className="flex items-center text-amber-500 text-sm font-normal bg-amber-50 px-3 py-1 rounded-full">
                   <AlertTriangle size={16} className="mr-1" />
@@ -245,21 +301,28 @@ const DietPlanPage = () => {
               )}
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             <div className="prose max-w-none">
-              <div className="whitespace-pre-line">{dietPlan}</div>
+              <div className="whitespace-pre-line bg-white/50 p-5 rounded-lg border border-muted">
+                {dietPlan}
+              </div>
             </div>
-            <div className="flex justify-between mt-6">
+            <div className="flex flex-col sm:flex-row gap-3 justify-between mt-6">
               <Button variant="outline" onClick={() => setDietPlan(null)}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
                 Edit Pet Details
               </Button>
-              <Button onClick={() => window.print()} className="print:hidden">
+              <Button onClick={() => window.print()} className="print:hidden bg-secondary hover:bg-secondary/90 text-secondary-foreground">
                 Print Diet Plan
               </Button>
             </div>
           </CardContent>
         </Card>
       )}
+      
+      <div className="mt-8 text-center text-sm text-muted-foreground">
+        <p>Our AI-generated diet plans are for informational purposes only. Always consult with a veterinarian before making significant changes to your pet's diet.</p>
+      </div>
     </div>
   );
 };
