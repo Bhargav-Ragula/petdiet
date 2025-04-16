@@ -1,0 +1,248 @@
+
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription } from "@/components/ui/form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { toast } from "sonner";
+import { ArrowLeft, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+
+const petTypes = ["Dog", "Cat", "Bird", "Fish", "Hamster", "Rabbit", "Other"];
+const activityLevels = ["Low", "Moderate", "High", "Very High"];
+
+const formSchema = z.object({
+  petType: z.string().min(1, { message: "Pet type is required" }),
+  breed: z.string().min(1, { message: "Breed is required" }),
+  age: z.string().min(1, { message: "Age is required" }),
+  weight: z.string().min(1, { message: "Weight is required" }),
+  activityLevel: z.string().min(1, { message: "Activity level is required" }),
+  dietaryRestrictions: z.string().optional(),
+});
+
+const DietPlanPage = () => {
+  const navigate = useNavigate();
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [dietPlan, setDietPlan] = useState<string | null>(null);
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      petType: "",
+      breed: "",
+      age: "",
+      weight: "",
+      activityLevel: "",
+      dietaryRestrictions: "",
+    },
+  });
+
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    setIsGenerating(true);
+    setDietPlan(null);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-diet-plan', {
+        body: {
+          petType: values.petType,
+          breed: values.breed,
+          age: values.age,
+          weight: values.weight,
+          activityLevel: values.activityLevel,
+          dietaryRestrictions: values.dietaryRestrictions,
+        },
+      });
+
+      if (error) {
+        toast.error("Failed to generate diet plan");
+        console.error("Function error:", error);
+        return;
+      }
+
+      setDietPlan(data.dietPlan);
+      toast.success("Diet plan generated successfully!");
+    } catch (error) {
+      console.error("Error generating diet plan:", error);
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  return (
+    <div className="py-6 space-y-6 max-w-3xl mx-auto">
+      <div className="flex items-center">
+        <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="mr-2">
+          <ArrowLeft size={20} />
+        </Button>
+        <h1 className="text-2xl font-bold text-foreground">
+          AI Pet Diet Plan
+        </h1>
+      </div>
+
+      {!dietPlan ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Enter Your Pet's Details</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="petType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Pet Type</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select pet type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {petTypes.map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {type}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="breed"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Breed</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter breed" {...field} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="age"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Age (Years)</FormLabel>
+                        <FormControl>
+                          <Input type="number" placeholder="Enter age" {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="weight"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Weight (lbs)</FormLabel>
+                        <FormControl>
+                          <Input type="number" placeholder="Enter weight" {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="activityLevel"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Activity Level</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select activity level" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {activityLevels.map((level) => (
+                            <SelectItem key={level} value={level}>
+                              {level}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="dietaryRestrictions"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Dietary Restrictions/Special Notes</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Any allergies, health concerns, or preferences? (optional)" 
+                          className="resize-none" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Include any allergies, health concerns or preferences your pet has
+                      </FormDescription>
+                    </FormItem>
+                  )}
+                />
+
+                <Button 
+                  type="submit" 
+                  className="w-full" 
+                  disabled={isGenerating}
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Generating Diet Plan...
+                    </>
+                  ) : (
+                    "Generate Diet Plan"
+                  )}
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle>Your Pet's Diet Plan</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="prose max-w-none">
+              <div className="whitespace-pre-line">{dietPlan}</div>
+            </div>
+            <div className="flex justify-between mt-6">
+              <Button variant="outline" onClick={() => setDietPlan(null)}>
+                Edit Pet Details
+              </Button>
+              <Button onClick={() => window.print()} className="print:hidden">
+                Print Diet Plan
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+};
+
+export default DietPlanPage;

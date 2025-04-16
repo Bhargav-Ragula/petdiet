@@ -10,6 +10,7 @@ import TrackerPage from "./pages/TrackerPage";
 import InsightsPage from "./pages/InsightsPage";
 import ProfilePage from "./pages/ProfilePage";
 import QuizPage from "./pages/QuizPage";
+import DietPlanPage from "./pages/DietPlanPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/insights" element={<MainLayout><InsightsPage /></MainLayout>} />
           <Route path="/profile" element={<MainLayout><ProfilePage /></MainLayout>} />
           <Route path="/quiz" element={<QuizPage />} />
+          <Route path="/diet-plan" element={<MainLayout><DietPlanPage /></MainLayout>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

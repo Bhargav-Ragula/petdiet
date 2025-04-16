@@ -1,9 +1,8 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Heart, Sparkles, ArrowRight, Lightbulb, Wand2 } from "lucide-react";
+import { Heart, Sparkles, ArrowRight, Lightbulb, Wand2, Utensils } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -57,7 +56,6 @@ const DiscoverPage = () => {
   const [activeTab, setActiveTab] = useState("recommended");
   const [isGenerating, setIsGenerating] = useState(false);
   
-  // Mock pet recommendations data
   const recommendedPets = [
     { 
       name: "Buddy", 
@@ -82,14 +80,12 @@ const DiscoverPage = () => {
     },
   ];
 
-  const handleCreateAiPlan = async () => {
-    setIsGenerating(true);
-    navigate("/quiz");
-    setIsGenerating(false);
+  const handleCreateAiPlan = () => {
+    navigate("/diet-plan");
   };
 
   const handlePlanTypeClick = (planType: string) => {
-    toast.info(`${planType} plan selected! Continue to the quiz for a custom plan.`);
+    toast.info(`${planType} plan selected. Continue to create your custom plan.`);
   };
 
   return (
@@ -102,13 +98,13 @@ const DiscoverPage = () => {
       </div>
 
       <div className="bg-gradient-to-r from-primary/30 to-secondary/30 rounded-2xl p-5 shadow-sm">
-        <h2 className="font-semibold text-lg mb-2">Discover Your Perfect Pet Match</h2>
-        <p className="text-sm mb-3">Take our quick quiz and get AI-powered pet recommendations based on your lifestyle and preferences.</p>
+        <h2 className="font-semibold text-lg mb-2">Generate an AI Pet Diet Plan</h2>
+        <p className="text-sm mb-3">Enter your pet's details and get a personalized diet plan tailored to their needs.</p>
         <Button 
           className="bg-primary hover:bg-primary/90 text-primary-foreground flex items-center"
-          onClick={() => navigate('/quiz')}
+          onClick={handleCreateAiPlan}
         >
-          Start Pet Matching Quiz <ArrowRight size={16} className="ml-2" />
+          <Utensils size={16} className="mr-2" /> Create Pet Diet Plan
         </Button>
       </div>
 
@@ -131,18 +127,6 @@ const DiscoverPage = () => {
               <span className="text-xs text-muted-foreground mt-1">{type.description}</span>
             </button>
           ))}
-        </div>
-        
-        <div className="mt-4 flex justify-center">
-          <Button 
-            size="lg"
-            className="bg-primary hover:bg-primary/90 text-primary-foreground flex items-center"
-            onClick={handleCreateAiPlan}
-            disabled={isGenerating}
-          >
-            <Lightbulb className="mr-2" size={18} />
-            {isGenerating ? "Generating Plan..." : "Create AI Pet Care Plan"}
-          </Button>
         </div>
       </div>
 
