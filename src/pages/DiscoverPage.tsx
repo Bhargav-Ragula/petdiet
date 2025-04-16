@@ -3,15 +3,18 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Heart, Sparkles, ArrowRight } from "lucide-react";
+import { Heart, Sparkles, ArrowRight, Lightbulb, Wand2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
-const petTypes = [
-  { id: "dogs", name: "Dogs", icon: "🐕" },
-  { id: "cats", name: "Cats", icon: "🐈" },
-  { id: "birds", name: "Birds", icon: "🦜" },
-  { id: "small-pets", name: "Small Pets", icon: "🐹" },
-  { id: "fish", name: "Fish", icon: "🐠" },
-  { id: "reptiles", name: "Reptiles", icon: "🦎" },
+const aiPlanTypes = [
+  { id: "nutrition", name: "Nutrition", icon: "🍖", description: "Dietary plans & feeding schedules" },
+  { id: "training", name: "Training", icon: "🎾", description: "Behavior & tricks training"  },
+  { id: "health", name: "Health", icon: "⚕️", description: "Wellness & care routines" },
+  { id: "activities", name: "Activities", icon: "🏞️", description: "Exercises & playtime ideas" },
+  { id: "grooming", name: "Grooming", icon: "🛁", description: "Cleaning & maintenance tips" },
+  { id: "social", name: "Socialization", icon: "🐩", description: "Interaction with other pets" },
 ];
 
 const PetCard = ({ name, type, match, image, tags }: { 
@@ -50,7 +53,9 @@ const PetCard = ({ name, type, match, image, tags }: {
 );
 
 const DiscoverPage = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("recommended");
+  const [isGenerating, setIsGenerating] = useState(false);
   
   // Mock pet recommendations data
   const recommendedPets = [
@@ -77,6 +82,16 @@ const DiscoverPage = () => {
     },
   ];
 
+  const handleCreateAiPlan = async () => {
+    setIsGenerating(true);
+    navigate("/quiz");
+    setIsGenerating(false);
+  };
+
+  const handlePlanTypeClick = (planType: string) => {
+    toast.info(`${planType} plan selected! Continue to the quiz for a custom plan.`);
+  };
+
   return (
     <div className="py-6 space-y-6">
       <div>
@@ -89,27 +104,45 @@ const DiscoverPage = () => {
       <div className="bg-gradient-to-r from-primary/30 to-secondary/30 rounded-2xl p-5 shadow-sm">
         <h2 className="font-semibold text-lg mb-2">Discover Your Perfect Pet Match</h2>
         <p className="text-sm mb-3">Take our quick quiz and get AI-powered pet recommendations based on your lifestyle and preferences.</p>
-        <Button className="bg-primary hover:bg-primary/90 text-primary-foreground flex items-center">
+        <Button 
+          className="bg-primary hover:bg-primary/90 text-primary-foreground flex items-center"
+          onClick={() => navigate('/quiz')}
+        >
           Start Pet Matching Quiz <ArrowRight size={16} className="ml-2" />
         </Button>
       </div>
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="font-semibold text-xl">Browse Pets</h2>
+          <h2 className="font-semibold text-xl flex items-center">
+            <Wand2 className="mr-2 text-primary" size={20} /> AI Pet Care Plans
+          </h2>
         </div>
-        <div className="flex overflow-x-auto pb-2 gap-3 scrollbar-hide -mx-1 px-1">
-          {petTypes.map(type => (
-            <div key={type.id} className="flex-shrink-0">
-              <Button 
-                variant="outline" 
-                className="flex flex-col h-auto py-3 px-5 border-2 hover:border-primary/50 hover:bg-primary/5"
-              >
-                <span className="text-2xl mb-1">{type.icon}</span>
-                <span className="text-xs font-medium">{type.name}</span>
-              </Button>
-            </div>
+        <p className="text-sm text-muted-foreground">Select a plan type to generate personalized care guidance for your pet</p>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+          {aiPlanTypes.map(type => (
+            <button
+              key={type.id}
+              onClick={() => handlePlanTypeClick(type.name)}
+              className="flex flex-col items-center p-4 rounded-xl border-2 border-muted hover:border-primary/50 hover:bg-primary/5 transition-all"
+            >
+              <span className="text-2xl mb-2">{type.icon}</span>
+              <span className="font-medium text-sm">{type.name}</span>
+              <span className="text-xs text-muted-foreground mt-1">{type.description}</span>
+            </button>
           ))}
+        </div>
+        
+        <div className="mt-4 flex justify-center">
+          <Button 
+            size="lg"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground flex items-center"
+            onClick={handleCreateAiPlan}
+            disabled={isGenerating}
+          >
+            <Lightbulb className="mr-2" size={18} />
+            {isGenerating ? "Generating Plan..." : "Create AI Pet Care Plan"}
+          </Button>
         </div>
       </div>
 
