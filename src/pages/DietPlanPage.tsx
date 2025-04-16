@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,7 +11,24 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, AlertTriangle, PawPrint, Activity, Apple, Heart } from "lucide-react";
+import { 
+  ArrowLeft, 
+  Loader2, 
+  AlertCircle, 
+  PawPrint, 
+  Activity, 
+  Apple, 
+  Heart,
+  Clock,
+  Sun,
+  Coffee,
+  Sunset,
+  Moon,
+  CalendarCheck,
+  Utensils,
+  Dog,
+  Cat
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const petTypes = ["Dog", "Cat", "Bird", "Fish", "Hamster", "Rabbit", "Other"];
@@ -31,6 +48,7 @@ const DietPlanPage = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [dietPlan, setDietPlan] = useState<string | null>(null);
   const [isFromFallback, setIsFromFallback] = useState(false);
+  const [petDetails, setPetDetails] = useState<Record<string, string> | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -44,10 +62,175 @@ const DietPlanPage = () => {
     },
   });
 
+  function getPetIcon(petType: string) {
+    switch(petType?.toLowerCase()) {
+      case 'dog': return <Dog className="h-6 w-6 mr-2" />;
+      case 'cat': return <Cat className="h-6 w-6 mr-2" />;
+      default: return <PawPrint className="h-6 w-6 mr-2" />;
+    }
+  }
+
+  // Parse the diet plan sections from markdown-like text
+  const parsePlanSections = (planText: string) => {
+    if (!planText) return { header: "", sections: [] };
+
+    const lines = planText.split('\n');
+    let header = '';
+    const sections: { title: string, content: string[], isSchedule: boolean }[] = [];
+    let currentSection: { title: string, content: string[], isSchedule: boolean } | null = null;
+
+    lines.forEach(line => {
+      if (line.startsWith('# ')) {
+        header = line.replace('# ', '');
+      } else if (line.startsWith('## ')) {
+        if (currentSection) sections.push(currentSection);
+        const title = line.replace('## ', '');
+        const isSchedule = title.includes('Schedule') || title.includes('Daily') || 
+                          title.includes('Morning') || title.includes('Evening');
+        currentSection = { title, content: [], isSchedule };
+      } else if (currentSection) {
+        currentSection.content.push(line);
+      }
+    });
+
+    if (currentSection) sections.push(currentSection);
+    return { header, sections };
+  };
+
+  // Render a time-based schedule section
+  const renderScheduleSection = (section: { title: string, content: string[] }) => {
+    const timeBlocks: { time: string, icon: JSX.Element, title: string, items: string[] }[] = [];
+    let currentTime = '';
+    let currentItems: string[] = [];
+
+    section.content.forEach(line => {
+      if (line.startsWith('### 🌅 Morning')) {
+        currentTime = line.replace('### 🌅 Morning', '').trim();
+        currentItems = [];
+      } else if (line.startsWith('### 🕛 Midday')) {
+        if (currentTime) {
+          timeBlocks.push({ 
+            time: currentTime, 
+            icon: <Sun className="h-5 w-5 text-yellow-500" />, 
+            title: 'Morning', 
+            items: [...currentItems] 
+          });
+        }
+        currentTime = line.replace('### 🕛 Midday', '').trim();
+        currentItems = [];
+      } else if (line.startsWith('### 🌇 Afternoon')) {
+        if (currentTime) {
+          timeBlocks.push({ 
+            time: currentTime, 
+            icon: <Coffee className="h-5 w-5 text-amber-600" />, 
+            title: 'Midday', 
+            items: [...currentItems] 
+          });
+        }
+        currentTime = line.replace('### 🌇 Afternoon', '').trim();
+        currentItems = [];
+      } else if (line.startsWith('### 🌙 Evening')) {
+        if (currentTime) {
+          timeBlocks.push({ 
+            time: currentTime, 
+            icon: <Sunset className="h-5 w-5 text-orange-500" />, 
+            title: 'Afternoon', 
+            items: [...currentItems] 
+          });
+        }
+        currentTime = line.replace('### 🌙 Evening', '').trim();
+        currentItems = [];
+      } else if (line.startsWith('### 🌠 Night')) {
+        if (currentTime) {
+          timeBlocks.push({ 
+            time: currentTime, 
+            icon: <Moon className="h-5 w-5 text-indigo-400" />, 
+            title: 'Evening', 
+            items: [...currentItems] 
+          });
+        }
+        currentTime = line.replace('### 🌠 Night', '').trim();
+        currentItems = [];
+      } else if (line.trim() !== '') {
+        // Handle items (bullet points or regular text)
+        const cleanedLine = line.replace(/^- /, '');
+        if (cleanedLine) {
+          currentItems.push(cleanedLine);
+        }
+      }
+    });
+
+    // Add the last time block
+    if (currentTime) {
+      timeBlocks.push({ 
+        time: currentTime, 
+        icon: currentTime.includes('Night') ? 
+          <Moon className="h-5 w-5 text-blue-900" /> : 
+          <Moon className="h-5 w-5 text-indigo-400" />, 
+        title: currentTime.includes('Night') ? 'Night' : 'Evening', 
+        items: [...currentItems] 
+      });
+    }
+
+    return (
+      <div className="space-y-4 mt-3">
+        {timeBlocks.map((block, idx) => (
+          <Card key={idx} className="overflow-hidden border-l-4 border-l-primary/60">
+            <CardHeader className="py-3 bg-muted/50 flex flex-row items-center">
+              <div className="mr-3 bg-background rounded-full p-2">
+                {block.icon}
+              </div>
+              <div>
+                <CardTitle className="text-base flex items-center">
+                  <Clock className="h-4 w-4 mr-1 text-muted-foreground" /> 
+                  {block.title} {block.time}
+                </CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="py-3">
+              <ul className="space-y-1 list-disc pl-5 text-sm">
+                {block.items.map((item, i) => (
+                  <li key={i} className="text-muted-foreground">{item}</li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  };
+
+  // Render a regular content section
+  const renderContentSection = (section: { title: string, content: string[] }) => {
+    return (
+      <div className="mt-3">
+        <div className="flex items-center mb-2">
+          <CalendarCheck className="h-5 w-5 mr-2 text-primary" />
+          <h3 className="text-lg font-medium">{section.title}</h3>
+        </div>
+        <div className="pl-7 space-y-1">
+          {section.content.map((line, i) => {
+            if (line.trim() === '') return null;
+            
+            if (line.startsWith('- ')) {
+              return <p key={i} className="flex items-start text-muted-foreground text-sm">
+                <span className="mr-2 mt-1.5 h-1 w-1 rounded-full bg-primary/70 flex-shrink-0"></span>
+                <span>{line.replace(/^- /, '')}</span>
+              </p>;
+            }
+            
+            return <p key={i} className="text-muted-foreground text-sm">{line}</p>;
+          })}
+        </div>
+      </div>
+    );
+  };
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsGenerating(true);
     setDietPlan(null);
     setIsFromFallback(false);
+    setPetDetails(null);
     
     try {
       const { data, error } = await supabase.functions.invoke('generate-diet-plan', {
@@ -68,6 +251,7 @@ const DietPlanPage = () => {
       }
 
       setDietPlan(data.dietPlan);
+      setPetDetails(data.metadata);
       
       // Check if the response was generated by the fallback
       if (data.generatedBy === "fallback") {
@@ -92,7 +276,7 @@ const DietPlanPage = () => {
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="mr-2">
           <ArrowLeft size={20} />
         </Button>
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">
           AI Pet Diet Plan
         </h1>
       </div>
@@ -287,36 +471,82 @@ const DietPlanPage = () => {
         </div>
       ) : (
         <Card className="border-0 shadow-lg overflow-hidden">
-          <CardHeader className="bg-gradient-to-r from-primary/10 to-secondary/10">
-            <CardTitle className="flex items-center justify-between">
-              <span className="flex items-center gap-2">
-                <PawPrint className="h-5 w-5 text-primary" />
-                Your Pet's Diet Plan
-              </span>
-              {isFromFallback && (
-                <div className="flex items-center text-amber-500 text-sm font-normal bg-amber-50 px-3 py-1 rounded-full">
-                  <AlertTriangle size={16} className="mr-1" />
-                  Fallback Plan
+          <CardHeader className="bg-gradient-to-r from-orange-100 to-amber-50">
+            <div className="flex items-center gap-4">
+              <div className="bg-white/80 rounded-full p-3 shadow-sm">
+                {getPetIcon(petDetails?.petType || '')}
+              </div>
+              <div>
+                <div className="flex items-center justify-between w-full">
+                  <CardTitle className="flex items-center">
+                    <Utensils className="h-6 w-6 text-primary mr-2" />
+                    Pet Diet Plan
+                    {isFromFallback && (
+                      <div className="ml-4 flex items-center text-amber-500 text-sm font-normal bg-amber-50 px-3 py-1 rounded-full">
+                        <AlertCircle size={16} className="mr-1" />
+                        Fallback Plan
+                      </div>
+                    )}
+                  </CardTitle>
                 </div>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="prose max-w-none">
-              <div className="whitespace-pre-line bg-white/50 p-5 rounded-lg border border-muted">
-                {dietPlan}
+                <CardDescription className="flex items-center gap-1 mt-1">
+                  {petDetails && (
+                    <>
+                      <span className="bg-background/80 px-2 py-0.5 rounded-full text-xs">
+                        {petDetails.breed}
+                      </span>
+                      <span className="bg-background/80 px-2 py-0.5 rounded-full text-xs">
+                        {petDetails.age} years
+                      </span>
+                      <span className="bg-background/80 px-2 py-0.5 rounded-full text-xs">
+                        {petDetails.weight} lbs
+                      </span>
+                      <span className="bg-background/80 px-2 py-0.5 rounded-full text-xs">
+                        {petDetails.activityLevel} activity
+                      </span>
+                    </>
+                  )}
+                </CardDescription>
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row gap-3 justify-between mt-6">
-              <Button variant="outline" onClick={() => setDietPlan(null)}>
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Edit Pet Details
-              </Button>
-              <Button onClick={() => window.print()} className="print:hidden bg-secondary hover:bg-secondary/90 text-secondary-foreground">
-                Print Diet Plan
-              </Button>
-            </div>
+          </CardHeader>
+          
+          <CardContent className="pt-6 px-6">
+            {(() => {
+              const { header, sections } = parsePlanSections(dietPlan);
+              return (
+                <div className="prose max-w-none">
+                  {sections.map((section, index) => (
+                    <div key={index} className="mb-6 pb-6 border-b last:border-b-0">
+                      {section.isSchedule ? 
+                        renderScheduleSection(section) : 
+                        renderContentSection(section)}
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
           </CardContent>
+          
+          <CardFooter className="flex flex-col sm:flex-row gap-3 justify-between bg-muted/30 px-6 py-4">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setDietPlan(null);
+                setPetDetails(null);
+              }}
+              className="w-full sm:w-auto"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Edit Pet Details
+            </Button>
+            <Button 
+              onClick={() => window.print()} 
+              className="print:hidden w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground"
+            >
+              Print Diet Plan
+            </Button>
+          </CardFooter>
         </Card>
       )}
       

@@ -8,11 +8,29 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { toast } from "sonner";
-import { Utensils, Activity, ThumbsUp, AlertCircle, Loader2 } from "lucide-react";
+import { 
+  ArrowLeft, 
+  Loader2, 
+  AlertCircle, 
+  Clock, 
+  Sun, 
+  Coffee, 
+  Sunset, 
+  Moon, 
+  CalendarCheck, 
+  Utensils, 
+  Bone, 
+  Dog, 
+  Cat, 
+  Dumbbell, 
+  Medal, 
+  Heart, 
+  BookOpen, 
+  Lightbulb
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 // Form schema
@@ -40,6 +58,7 @@ const PetCarePlanPage = () => {
   const [generatedPlan, setGeneratedPlan] = useState<string | null>(null);
   const [isUsingFallback, setIsUsingFallback] = useState(false);
   const [petDetails, setPetDetails] = useState<Record<string, string> | null>(null);
+  const [activeTab, setActiveTab] = useState("generate");
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -80,19 +99,28 @@ const PetCarePlanPage = () => {
   function getPlanIcon(type: string) {
     const icons: Record<string, JSX.Element> = {
       nutrition: <Utensils className="h-8 w-8 text-primary" />,
-      training: <Activity className="h-8 w-8 text-primary" />,
-      health: <ThumbsUp className="h-8 w-8 text-primary" />,
-      activities: <Activity className="h-8 w-8 text-primary" />,
-      grooming: <Utensils className="h-8 w-8 text-primary" />,
-      social: <ThumbsUp className="h-8 w-8 text-primary" />
+      training: <Dumbbell className="h-8 w-8 text-primary" />,
+      health: <Heart className="h-8 w-8 text-primary" />,
+      activities: <Medal className="h-8 w-8 text-primary" />,
+      grooming: <BookOpen className="h-8 w-8 text-primary" />,
+      social: <Lightbulb className="h-8 w-8 text-primary" />
     };
-    return icons[type] || <ThumbsUp className="h-8 w-8 text-primary" />;
+    return icons[type] || <Heart className="h-8 w-8 text-primary" />;
+  }
+
+  function getPetIcon(petType: string) {
+    switch(petType?.toLowerCase()) {
+      case 'dog': return <Dog className="h-6 w-6 mr-2" />;
+      case 'cat': return <Cat className="h-6 w-6 mr-2" />;
+      default: return <Bone className="h-6 w-6 mr-2" />;
+    }
   }
 
   async function onSubmit(data: FormData) {
     setIsGenerating(true);
     setGeneratedPlan(null);
     setIsUsingFallback(false);
+    setActiveTab("generate");
 
     try {
       const { data: planData, error } = await supabase.functions.invoke("generate-pet-care-plan", {
@@ -106,6 +134,7 @@ const PetCarePlanPage = () => {
       setIsUsingFallback(planData.generatedBy === "fallback");
       
       toast.success(`${planTitle} generated successfully!`);
+      setActiveTab("results");
     } catch (error) {
       console.error("Failed to generate plan:", error);
       toast.error(`Failed to generate ${planTitle.toLowerCase()}. Please try again.`);
@@ -114,48 +143,228 @@ const PetCarePlanPage = () => {
     }
   }
 
+  // Function to parse the plan sections from markdown-like text
+  const parsePlanSections = (planText: string) => {
+    if (!planText) return { header: "", sections: [] };
+
+    const lines = planText.split('\n');
+    let header = '';
+    const sections: { title: string, content: string[], isSchedule: boolean }[] = [];
+    let currentSection: { title: string, content: string[], isSchedule: boolean } | null = null;
+
+    lines.forEach(line => {
+      if (line.startsWith('# ')) {
+        header = line.replace('# ', '');
+      } else if (line.startsWith('## ')) {
+        if (currentSection) sections.push(currentSection);
+        const title = line.replace('## ', '');
+        const isSchedule = title.includes('Schedule') || title.includes('Daily') || 
+                          title.includes('Morning') || title.includes('Evening');
+        currentSection = { title, content: [], isSchedule };
+      } else if (currentSection) {
+        currentSection.content.push(line);
+      }
+    });
+
+    if (currentSection) sections.push(currentSection);
+    return { header, sections };
+  };
+
+  // Render a time-based schedule section
+  const renderScheduleSection = (section: { title: string, content: string[] }) => {
+    const timeBlocks: { time: string, icon: JSX.Element, title: string, items: string[] }[] = [];
+    let currentTime = '';
+    let currentItems: string[] = [];
+
+    section.content.forEach(line => {
+      if (line.startsWith('### 🌅 Morning')) {
+        currentTime = line.replace('### 🌅 Morning', '').trim();
+        currentItems = [];
+      } else if (line.startsWith('### 🕛 Midday')) {
+        if (currentTime) {
+          timeBlocks.push({ 
+            time: currentTime, 
+            icon: <Sun className="h-5 w-5 text-yellow-500" />, 
+            title: 'Morning', 
+            items: [...currentItems] 
+          });
+        }
+        currentTime = line.replace('### 🕛 Midday', '').trim();
+        currentItems = [];
+      } else if (line.startsWith('### 🌇 Afternoon')) {
+        if (currentTime) {
+          timeBlocks.push({ 
+            time: currentTime, 
+            icon: <Coffee className="h-5 w-5 text-amber-600" />, 
+            title: 'Midday', 
+            items: [...currentItems] 
+          });
+        }
+        currentTime = line.replace('### 🌇 Afternoon', '').trim();
+        currentItems = [];
+      } else if (line.startsWith('### 🌙 Evening')) {
+        if (currentTime) {
+          timeBlocks.push({ 
+            time: currentTime, 
+            icon: <Sunset className="h-5 w-5 text-orange-500" />, 
+            title: 'Afternoon', 
+            items: [...currentItems] 
+          });
+        }
+        currentTime = line.replace('### 🌙 Evening', '').trim();
+        currentItems = [];
+      } else if (line.startsWith('### 🌠 Night')) {
+        if (currentTime) {
+          timeBlocks.push({ 
+            time: currentTime, 
+            icon: <Moon className="h-5 w-5 text-indigo-400" />, 
+            title: 'Evening', 
+            items: [...currentItems] 
+          });
+        }
+        currentTime = line.replace('### 🌠 Night', '').trim();
+        currentItems = [];
+      } else if (line.trim() !== '') {
+        // Handle items (bullet points or regular text)
+        const cleanedLine = line.replace(/^- /, '');
+        if (cleanedLine) {
+          currentItems.push(cleanedLine);
+        }
+      }
+    });
+
+    // Add the last time block
+    if (currentTime) {
+      timeBlocks.push({ 
+        time: currentTime, 
+        icon: currentTime.includes('Night') ? 
+          <Moon className="h-5 w-5 text-blue-900" /> : 
+          <Moon className="h-5 w-5 text-indigo-400" />, 
+        title: currentTime.includes('Night') ? 'Night' : 'Evening', 
+        items: [...currentItems] 
+      });
+    }
+
+    return (
+      <div className="space-y-4 mt-3">
+        {timeBlocks.map((block, idx) => (
+          <Card key={idx} className="overflow-hidden border-l-4 border-l-primary/60">
+            <CardHeader className="py-3 bg-muted/50 flex flex-row items-center">
+              <div className="mr-3 bg-background rounded-full p-2">
+                {block.icon}
+              </div>
+              <div>
+                <CardTitle className="text-base flex items-center">
+                  <Clock className="h-4 w-4 mr-1 text-muted-foreground" /> 
+                  {block.title} {block.time}
+                </CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="py-3">
+              <ul className="space-y-1 list-disc pl-5 text-sm">
+                {block.items.map((item, i) => (
+                  <li key={i} className="text-muted-foreground">{item}</li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  };
+
+  // Render a regular content section
+  const renderContentSection = (section: { title: string, content: string[] }) => {
+    return (
+      <div className="mt-3">
+        <div className="flex items-center mb-2">
+          <CalendarCheck className="h-5 w-5 mr-2 text-primary" />
+          <h3 className="text-lg font-medium">{section.title}</h3>
+        </div>
+        <div className="pl-7 space-y-1">
+          {section.content.map((line, i) => {
+            if (line.trim() === '') return null;
+            
+            if (line.startsWith('- ')) {
+              return <p key={i} className="flex items-start text-muted-foreground text-sm">
+                <span className="mr-2 mt-1.5 h-1 w-1 rounded-full bg-primary/70 flex-shrink-0"></span>
+                <span>{line.replace(/^- /, '')}</span>
+              </p>;
+            }
+            
+            return <p key={i} className="text-muted-foreground text-sm">{line}</p>;
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  // Determine gradient based on plan type
+  const getPlanGradient = () => {
+    const gradients: Record<string, string> = {
+      nutrition: "from-orange-100 to-amber-50",
+      training: "from-blue-100 to-sky-50",
+      health: "from-red-100 to-rose-50",
+      activities: "from-green-100 to-emerald-50",
+      grooming: "from-purple-100 to-violet-50",
+      social: "from-yellow-100 to-amber-50"
+    };
+    return gradients[planType] || "from-primary/10 to-secondary/10";
+  };
+
+  // Get breed-specific tips or image based on breed name
+  const getBreedSpecificContent = () => {
+    // This could be expanded with a larger database of breed-specific tips
+    return null;
+  };
+
   return (
     <div className="py-6 space-y-6">
       <div className="mb-6">
-        <div className="bg-gradient-to-r from-primary/40 to-secondary/40 p-4 rounded-lg mb-4">
-          <h1 className="text-2xl font-bold text-foreground">{planTitle} Generator</h1>
-          <p className="text-muted-foreground">{getPlanDescription(planType)}</p>
+        <div className={`bg-gradient-to-r ${getPlanGradient()} p-6 rounded-lg mb-6`}>
+          <div className="flex items-center">
+            {getPlanIcon(planType)}
+            <div className="ml-3">
+              <h1 className="text-2xl font-bold text-foreground">{planTitle} Generator</h1>
+              <p className="text-muted-foreground">{getPlanDescription(planType)}</p>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <Card>
+          <Card className="bg-gradient-to-br from-background to-muted/30">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg flex items-center">
-                {getPlanIcon(planType)}
-                <span className="ml-2">Personalized</span>
+                <Medal className="h-6 w-6 text-primary mr-2" />
+                <span>Personalized</span>
               </CardTitle>
-              <CardDescription>Tailored to your pet's needs</CardDescription>
+              <CardDescription>Tailored to your pet's unique needs</CardDescription>
             </CardHeader>
           </Card>
           
-          <Card>
+          <Card className="bg-gradient-to-br from-background to-muted/30">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg flex items-center">
-                <ThumbsUp className="h-8 w-8 text-primary mr-2" />
+                <CalendarCheck className="h-6 w-6 text-primary mr-2" />
+                <span>Structured</span>
+              </CardTitle>
+              <CardDescription>Detailed daily schedule for your pet</CardDescription>
+            </CardHeader>
+          </Card>
+          
+          <Card className="bg-gradient-to-br from-background to-muted/30">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg flex items-center">
+                <Lightbulb className="h-6 w-6 text-primary mr-2" />
                 <span>Expert Guidance</span>
               </CardTitle>
               <CardDescription>Based on professional recommendations</CardDescription>
             </CardHeader>
           </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center">
-                <Activity className="h-8 w-8 text-primary mr-2" />
-                <span>Actionable</span>
-              </CardTitle>
-              <CardDescription>Practical tips you can implement today</CardDescription>
-            </CardHeader>
-          </Card>
         </div>
       </div>
 
-      <Tabs defaultValue="generate" className="space-y-6">
+      <Tabs defaultValue="generate" value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="generate">Generate Plan</TabsTrigger>
           <TabsTrigger value="results" disabled={!generatedPlan}>Results</TabsTrigger>
@@ -183,7 +392,7 @@ const PetCarePlanPage = () => {
                         defaultValue={field.value}
                       >
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="bg-background">
                             <SelectValue placeholder="Select pet type" />
                           </SelectTrigger>
                         </FormControl>
@@ -207,7 +416,7 @@ const PetCarePlanPage = () => {
                     <FormItem>
                       <FormLabel>Breed</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. Golden Retriever" {...field} />
+                        <Input placeholder="e.g. Golden Retriever" {...field} className="bg-background" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -223,7 +432,7 @@ const PetCarePlanPage = () => {
                     <FormItem>
                       <FormLabel>Age (years)</FormLabel>
                       <FormControl>
-                        <Input type="number" placeholder="e.g. 5" {...field} />
+                        <Input type="number" placeholder="e.g. 5" {...field} className="bg-background" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -237,7 +446,7 @@ const PetCarePlanPage = () => {
                     <FormItem>
                       <FormLabel>Weight (lbs)</FormLabel>
                       <FormControl>
-                        <Input type="number" placeholder="e.g. 25" {...field} />
+                        <Input type="number" placeholder="e.g. 25" {...field} className="bg-background" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -256,7 +465,7 @@ const PetCarePlanPage = () => {
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="bg-background">
                           <SelectValue placeholder="Select activity level" />
                         </SelectTrigger>
                       </FormControl>
@@ -282,7 +491,8 @@ const PetCarePlanPage = () => {
                     <FormControl>
                       <Input 
                         placeholder="e.g. Allergies, health issues, or preferences" 
-                        {...field} 
+                        {...field}
+                        className="bg-background" 
                       />
                     </FormControl>
                     <FormMessage />
@@ -303,7 +513,7 @@ const PetCarePlanPage = () => {
         </TabsContent>
 
         <TabsContent value="results">
-          {generatedPlan && (
+          {generatedPlan && petDetails && (
             <div className="space-y-4">
               {isUsingFallback && (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 flex items-start">
@@ -318,44 +528,68 @@ const PetCarePlanPage = () => {
                 </div>
               )}
 
-              <Card className="overflow-hidden">
-                <CardHeader className="bg-muted/50">
-                  <CardTitle className="text-xl">
-                    {planTitle} for {petDetails?.breed} {petDetails?.petType}
-                  </CardTitle>
-                  <CardDescription>
-                    {petDetails?.age} years old • {petDetails?.weight} lbs • {petDetails?.activityLevel} activity
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  <div className="prose max-w-none">
-                    {generatedPlan.split('\n').map((line, i) => {
-                      // Handle headers (lines starting with #)
-                      if (line.startsWith('# ')) {
-                        return <h2 key={i} className="text-xl font-bold mt-4 mb-2">{line.replace('# ', '')}</h2>;
-                      }
-                      // Handle subheaders (lines starting with ##)
-                      else if (line.startsWith('## ')) {
-                        return <h3 key={i} className="text-lg font-bold mt-3 mb-1">{line.replace('## ', '')}</h3>;
-                      }
-                      // Handle bullet points
-                      else if (line.startsWith('- ')) {
-                        return <li key={i} className="ml-4 mb-1">{line.replace('- ', '')}</li>;
-                      }
-                      // Handle empty lines
-                      else if (line.trim() === '') {
-                        return <div key={i} className="h-2" />;
-                      }
-                      // Regular text
-                      else {
-                        return <p key={i} className="mb-2">{line}</p>;
-                      }
-                    })}
+              <Card className="overflow-hidden border-0 shadow-lg">
+                <CardHeader className={`bg-gradient-to-r ${getPlanGradient()} flex flex-row items-center gap-4`}>
+                  <div className="bg-white/80 rounded-full p-3 shadow-sm">
+                    {getPetIcon(petDetails.petType)}
                   </div>
+                  <div>
+                    <div className="flex items-center">
+                      {getPlanIcon(planType)}
+                      <CardTitle className="text-xl ml-2">
+                        {planTitle} for {petDetails.breed} {petDetails.petType}
+                      </CardTitle>
+                    </div>
+                    <CardDescription className="flex items-center gap-1 mt-1">
+                      <span className="bg-background/80 px-2 py-0.5 rounded-full text-xs">
+                        {petDetails.age} years
+                      </span>
+                      <span className="bg-background/80 px-2 py-0.5 rounded-full text-xs">
+                        {petDetails.weight} lbs
+                      </span>
+                      <span className="bg-background/80 px-2 py-0.5 rounded-full text-xs">
+                        {petDetails.activityLevel} activity
+                      </span>
+                    </CardDescription>
+                  </div>
+                </CardHeader>
+                
+                <CardContent className="pt-6 px-6">
+                  {(() => {
+                    const { header, sections } = parsePlanSections(generatedPlan);
+                    return (
+                      <div className="prose max-w-none">
+                        {sections.map((section, index) => (
+                          <div key={index} className="mb-6 pb-6 border-b last:border-b-0">
+                            {section.isSchedule ? 
+                              renderScheduleSection(section) : 
+                              renderContentSection(section)}
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
                 </CardContent>
+                
+                <CardFooter className="flex flex-col sm:flex-row gap-3 justify-between bg-muted/30 px-6 py-4">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setActiveTab('generate')}
+                    className="w-full sm:w-auto"
+                  >
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Edit Pet Details
+                  </Button>
+                  <Button 
+                    onClick={() => window.print()} 
+                    className="print:hidden w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground"
+                  >
+                    Print Plan
+                  </Button>
+                </CardFooter>
               </Card>
 
-              <div className="text-sm text-muted-foreground mt-4 p-3 border border-muted rounded-md">
+              <div className="text-sm text-muted-foreground mt-4 p-4 border border-muted rounded-md bg-muted/20">
                 <p>Disclaimer: This plan is generated by AI and should be used as general guidance only. 
                 Always consult with a veterinary professional for advice specific to your pet's health needs.</p>
               </div>
@@ -363,8 +597,9 @@ const PetCarePlanPage = () => {
               <Button 
                 onClick={() => navigate('/discover')}
                 variant="outline" 
-                className="mt-4"
+                className="mt-2"
               >
+                <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Discover
               </Button>
             </div>
