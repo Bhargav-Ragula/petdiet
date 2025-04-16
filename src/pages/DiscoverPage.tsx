@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -85,7 +86,8 @@ const DiscoverPage = () => {
   };
 
   const handlePlanTypeClick = (planType: string) => {
-    toast.info(`${planType} plan selected. Continue to create your custom plan.`);
+    navigate(`/pet-care-plan?type=${planType}`);
+    toast.info(`${planType.charAt(0).toUpperCase() + planType.slice(1)} plan selected.`);
   };
 
   return (
@@ -119,7 +121,7 @@ const DiscoverPage = () => {
           {aiPlanTypes.map(type => (
             <button
               key={type.id}
-              onClick={() => handlePlanTypeClick(type.name)}
+              onClick={() => handlePlanTypeClick(type.id)}
               className="flex flex-col items-center p-4 rounded-xl border-2 border-muted hover:border-primary/50 hover:bg-primary/5 transition-all"
             >
               <span className="text-2xl mb-2">{type.icon}</span>

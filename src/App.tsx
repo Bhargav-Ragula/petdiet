@@ -11,6 +11,7 @@ import InsightsPage from "./pages/InsightsPage";
 import ProfilePage from "./pages/ProfilePage";
 import QuizPage from "./pages/QuizPage";
 import DietPlanPage from "./pages/DietPlanPage";
+import PetCarePlanPage from "./pages/PetCarePlanPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/profile" element={<MainLayout><ProfilePage /></MainLayout>} />
           <Route path="/quiz" element={<QuizPage />} />
           <Route path="/diet-plan" element={<MainLayout><DietPlanPage /></MainLayout>} />
+          <Route path="/pet-care-plan" element={<MainLayout><PetCarePlanPage /></MainLayout>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
