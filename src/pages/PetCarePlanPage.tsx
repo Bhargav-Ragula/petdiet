@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -33,7 +32,6 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
-// Form schema
 const formSchema = z.object({
   petType: z.string().min(1, "Pet type is required"),
   breed: z.string().min(1, "Breed is required"),
@@ -59,6 +57,7 @@ const PetCarePlanPage = () => {
   const [isUsingFallback, setIsUsingFallback] = useState(false);
   const [petDetails, setPetDetails] = useState<Record<string, string> | null>(null);
   const [activeTab, setActiveTab] = useState("generate");
+  const [showBackOption, setShowBackOption] = useState(true);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -143,7 +142,6 @@ const PetCarePlanPage = () => {
     }
   }
 
-  // Function to parse the plan sections from markdown-like text
   const parsePlanSections = (planText: string) => {
     if (!planText) return { header: "", sections: [] };
 
@@ -170,7 +168,6 @@ const PetCarePlanPage = () => {
     return { header, sections };
   };
 
-  // Render a time-based schedule section
   const renderScheduleSection = (section: { title: string, content: string[] }) => {
     const timeBlocks: { time: string, icon: JSX.Element, title: string, items: string[] }[] = [];
     let currentTime = '';
@@ -225,7 +222,6 @@ const PetCarePlanPage = () => {
         currentTime = line.replace('### 🌠 Night', '').trim();
         currentItems = [];
       } else if (line.trim() !== '') {
-        // Handle items (bullet points or regular text)
         const cleanedLine = line.replace(/^- /, '');
         if (cleanedLine) {
           currentItems.push(cleanedLine);
@@ -233,7 +229,6 @@ const PetCarePlanPage = () => {
       }
     });
 
-    // Add the last time block
     if (currentTime) {
       timeBlocks.push({ 
         time: currentTime, 
@@ -273,7 +268,6 @@ const PetCarePlanPage = () => {
     );
   };
 
-  // Render a regular content section
   const renderContentSection = (section: { title: string, content: string[] }) => {
     return (
       <div className="mt-3">
@@ -299,7 +293,6 @@ const PetCarePlanPage = () => {
     );
   };
 
-  // Determine gradient based on plan type
   const getPlanGradient = () => {
     const gradients: Record<string, string> = {
       nutrition: "from-orange-100 to-amber-50",
@@ -312,9 +305,7 @@ const PetCarePlanPage = () => {
     return gradients[planType] || "from-primary/10 to-secondary/10";
   };
 
-  // Get breed-specific tips or image based on breed name
   const getBreedSpecificContent = () => {
-    // This could be expanded with a larger database of breed-specific tips
     return null;
   };
 
@@ -515,6 +506,24 @@ const PetCarePlanPage = () => {
         <TabsContent value="results">
           {generatedPlan && petDetails && (
             <div className="space-y-4">
+              {showBackOption && (
+                <div className="mb-4 flex justify-between items-center bg-muted/50 p-4 rounded-lg">
+                  <p className="text-sm text-muted-foreground">
+                    Would you like to go back and make changes?
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setActiveTab('generate');
+                      setShowBackOption(false);
+                    }}
+                  >
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Edit Details
+                  </Button>
+                </div>
+              )}
+
               {isUsingFallback && (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 flex items-start">
                   <AlertCircle className="text-yellow-600 mr-2 h-5 w-5 mt-0.5" />
