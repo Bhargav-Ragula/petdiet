@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Separator } from "@/components/ui/separator";
 
@@ -16,36 +15,40 @@ const AuthPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const { signInWithGoogle } = useAuth();
+  const { user, signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth();
+
+  // Redirect if user is already authenticated
+  useEffect(() => {
+    if (user) {
+      navigate("/home");
+    }
+  }, [user, navigate]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
+      const { error } = await signUpWithEmail(email, password);
 
       if (error) {
         toast({
-          title: "Error",
+          title: "Sign up failed",
           description: error.message,
           variant: "destructive",
         });
       } else {
         toast({
           title: "Success!",
-          description: "Check your email for the confirmation link.",
+          description: "Check your email for the confirmation link or continue using the app if email verification is disabled.",
         });
-        navigate("/home");
+        // We don't navigate here since the auth state change will take care of it
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error during sign up:", error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred.",
+        description: error?.message || "An unexpected error occurred.",
         variant: "destructive",
       });
     } finally {
@@ -58,14 +61,11 @@ const AuthPage = () => {
     setLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { error } = await signInWithEmail(email, password);
 
       if (error) {
         toast({
-          title: "Error",
+          title: "Sign in failed",
           description: error.message,
           variant: "destructive",
         });
@@ -74,13 +74,13 @@ const AuthPage = () => {
           title: "Welcome back!",
           description: "You've successfully signed in.",
         });
-        navigate("/home");
+        // We don't navigate here since the auth state change will take care of it
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error during sign in:", error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred.",
+        description: error?.message || "An unexpected error occurred.",
         variant: "destructive",
       });
     } finally {
@@ -92,11 +92,11 @@ const AuthPage = () => {
     try {
       await signInWithGoogle();
       // No need to navigate here as the OAuth redirect will handle this
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error during Google sign in:", error);
       toast({
         title: "Error",
-        description: "Could not sign in with Google",
+        description: error?.message || "Could not sign in with Google",
         variant: "destructive",
       });
     }
@@ -194,7 +194,9 @@ const AuthPage = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    minLength={6}
                   />
+                  <p className="text-xs text-gray-500">Password must be at least 6 characters</p>
                 </div>
               </CardContent>
               <CardFooter className="flex flex-col space-y-4">

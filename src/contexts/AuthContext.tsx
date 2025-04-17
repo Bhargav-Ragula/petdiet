@@ -8,6 +8,9 @@ interface AuthContextProps {
   session: Session | null;
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
+  signInWithEmail: (email: string, password: string) => Promise<{ error: any | null }>;
+  signUpWithEmail: (email: string, password: string) => Promise<{ error: any | null }>;
+  signOut: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextProps>({
@@ -15,6 +18,9 @@ export const AuthContext = createContext<AuthContextProps>({
   session: null,
   loading: true,
   signInWithGoogle: async () => {},
+  signInWithEmail: async () => ({ error: null }),
+  signUpWithEmail: async () => ({ error: null }),
+  signOut: async () => {},
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -26,6 +32,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // First set up the auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
+        console.log("Auth state changed:", event, currentSession);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         setLoading(false);
@@ -34,6 +41,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // Then check for an existing session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      console.log("Got existing session:", currentSession);
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       setLoading(false);
@@ -56,8 +64,49 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const signInWithEmail = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    
+    console.log("Sign in result:", data, error);
+    
+    return { error };
+  };
+
+  const signUpWithEmail = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: window.location.origin + '/auth'
+      }
+    });
+    
+    console.log("Sign up result:", data, error);
+    
+    return { error };
+  };
+
+  const signOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('Error signing out:', error);
+      throw error;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, session, loading, signInWithGoogle }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      session, 
+      loading, 
+      signInWithGoogle, 
+      signInWithEmail, 
+      signUpWithEmail,
+      signOut 
+    }}>
       {children}
     </AuthContext.Provider>
   );
