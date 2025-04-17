@@ -9,7 +9,105 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      pet_activities: {
+        Row: {
+          created_at: string | null
+          date: string | null
+          distance: string | null
+          duration: string
+          icon: string | null
+          id: string
+          location: string | null
+          pet_name: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          date?: string | null
+          distance?: string | null
+          duration: string
+          icon?: string | null
+          id?: string
+          location?: string | null
+          pet_name: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          date?: string | null
+          distance?: string | null
+          duration?: string
+          icon?: string | null
+          id?: string
+          location?: string | null
+          pet_name?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pet_goals: {
+        Row: {
+          created_at: string | null
+          icon: string | null
+          id: string
+          name: string
+          progress: number
+          target: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          progress?: number
+          target: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          progress?: number
+          target?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pet_notes: {
+        Row: {
+          content: string | null
+          created_at: string | null
+          id: string
+          image: string | null
+          tags: string[] | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          image?: string | null
+          tags?: string[] | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          image?: string | null
+          tags?: string[] | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -1,5 +1,5 @@
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -25,6 +25,8 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import AnalyticsWidget from "@/components/widgets/AnalyticsWidget";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate, useLocation } from "react-router-dom";
 
 // Mock data for analytics
 const analyticsData = [
@@ -47,7 +49,7 @@ const ActivityCard = ({ activity, onEdit, onDelete }) => (
           </div>
           <div>
             <CardTitle className="text-base font-medium">{activity.type}</CardTitle>
-            <CardDescription className="text-xs">{activity.petName}</CardDescription>
+            <CardDescription className="text-xs">{activity.pet_name || activity.petName}</CardDescription>
           </div>
         </div>
         <div className="flex space-x-2">
@@ -73,7 +75,7 @@ const ActivityCard = ({ activity, onEdit, onDelete }) => (
       )}
       <div className="flex items-center text-muted-foreground">
         <Calendar size={14} className="mr-1" />
-        {activity.date}
+        {typeof activity.date === 'string' ? activity.date : new Date(activity.date).toLocaleDateString() + ", " + new Date(activity.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
       </div>
       <div className="flex items-center text-muted-foreground">
         <MapPin size={14} className="mr-1" />
@@ -144,7 +146,7 @@ const Note = ({ note, onEdit, onDelete }) => {
         </div>
       )}
       <div className="flex justify-between mt-2">
-        <span className="text-xs text-muted-foreground">{note.date}</span>
+        <span className="text-xs text-muted-foreground">{typeof note.created_at === 'string' ? new Date(note.created_at).toLocaleDateString() : note.date}</span>
         <div className="flex gap-1">
           {note.tags && note.tags.map(tag => (
             <span key={tag} className="text-xs bg-muted px-2 py-0.5 rounded-full">
@@ -164,6 +166,11 @@ const TrackerPage = () => {
   const [isNewNoteDialogOpen, setIsNewNoteDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentEditId, setCurrentEditId] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userId, setUserId] = useState(null);
+  const location = useLocation();
+  const navigate = useNavigate();
   
   const [newActivity, setNewActivity] = useState({
     type: "Walk",
@@ -193,108 +200,272 @@ const TrackerPage = () => {
   
   const fileInputRef = useRef(null);
 
-  const handleAddActivity = () => {
-    // Create a new activity object
-    const activity = {
-      id: isEditMode ? currentEditId : Date.now(),
-      type: newActivity.type,
-      petName: newActivity.petName,
-      duration: `${newActivity.duration} min`,
-      distance: newActivity.type === "Walk" ? "2.1 km" : undefined,
-      date: "Today, " + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      location: newActivity.location,
-      icon: newActivity.type === "Walk" ? "🦮" : 
-            newActivity.type === "Play" ? "🎾" : 
-            newActivity.type === "Training" ? "🏆" : 
-            newActivity.type === "Grooming" ? "🧼" : 
-            newActivity.type === "Vet Visit" ? "🩺" : "🐾"
+  useEffect(() => {
+    // Check authentication status
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Please sign in to track activities");
+        navigate("/auth");
+        return;
+      }
+      
+      setUserId(session.user.id);
+      setIsAuthenticated(true);
+      
+      // Get tab from URL if available
+      const params = new URLSearchParams(location.search);
+      const tab = params.get('tab');
+      if (tab && (tab === 'activities' || tab === 'goals' || tab === 'notes')) {
+        setActiveTab(tab);
+      }
+      
+      // Fetch data
+      fetchActivities();
+      fetchGoals();
+      fetchNotes();
     };
-
-    if (isEditMode) {
-      setActivities(prev => prev.map(a => a.id === currentEditId ? activity : a));
-      toast.success(`Activity updated successfully`);
-    } else {
-      // Update activities state
-      setActivities(prev => [activity, ...prev]);
-      toast.success(`New ${newActivity.type} activity added`);
-    }
     
-    // Set insights flag to true once at least one activity is added
-    if (!hasInsights) {
+    checkAuth();
+  }, []);
+  
+  const fetchActivities = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('pet_activities')
+        .select('*')
+        .order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      
+      setActivities(data || []);
+      setHasInsights(data && data.length > 0);
+    } catch (error) {
+      console.error('Error fetching activities:', error);
+      toast.error('Failed to load activities');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const fetchGoals = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('pet_goals')
+        .select('*')
+        .order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      
+      setGoals(data || []);
+    } catch (error) {
+      console.error('Error fetching goals:', error);
+      toast.error('Failed to load goals');
+    }
+  };
+  
+  const fetchNotes = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('pet_notes')
+        .select('*')
+        .order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      
+      setNotes(data || []);
+    } catch (error) {
+      console.error('Error fetching notes:', error);
+      toast.error('Failed to load notes');
+    }
+  };
+
+  const handleAddActivity = async () => {
+    try {
+      if (!userId) {
+        toast.error("Please sign in to track activities");
+        return;
+      }
+      
+      if (isEditMode) {
+        const { error } = await supabase
+          .from('pet_activities')
+          .update({
+            type: newActivity.type,
+            pet_name: newActivity.petName,
+            duration: `${newActivity.duration} min`,
+            location: newActivity.location,
+            icon: newActivity.type === "Walk" ? "🦮" : 
+                  newActivity.type === "Play" ? "🎾" : 
+                  newActivity.type === "Training" ? "🏆" : 
+                  newActivity.type === "Grooming" ? "🧼" : 
+                  newActivity.type === "Vet Visit" ? "🩺" : "🐾"
+          })
+          .eq('id', currentEditId);
+          
+        if (error) throw error;
+        
+        toast.success("Activity updated successfully");
+      } else {
+        const { error } = await supabase
+          .from('pet_activities')
+          .insert({
+            user_id: userId,
+            type: newActivity.type,
+            pet_name: newActivity.petName,
+            duration: `${newActivity.duration} min`,
+            location: newActivity.location,
+            distance: newActivity.type === "Walk" ? "2.1 km" : null,
+            icon: newActivity.type === "Walk" ? "🦮" : 
+                  newActivity.type === "Play" ? "🎾" : 
+                  newActivity.type === "Training" ? "🏆" : 
+                  newActivity.type === "Grooming" ? "🧼" : 
+                  newActivity.type === "Vet Visit" ? "🩺" : "🐾"
+          });
+          
+        if (error) throw error;
+        
+        toast.success(`New ${newActivity.type} activity added`);
+      }
+      
+      // Set insights flag to true once at least one activity is added
       setHasInsights(true);
+      
+      // Refresh activities
+      fetchActivities();
+      
+      // Reset form and close dialog
+      setIsNewActivityDialogOpen(false);
+      setIsEditMode(false);
+      setCurrentEditId(null);
+      setNewActivity({
+        type: "Walk",
+        petName: "Buddy",
+        duration: "30",
+        location: "Local Park",
+      });
+    } catch (error) {
+      console.error('Error adding activity:', error);
+      toast.error('Failed to save activity');
     }
-    
-    // Reset form and close dialog
-    setIsNewActivityDialogOpen(false);
-    setIsEditMode(false);
-    setCurrentEditId(null);
-    setNewActivity({
-      type: "Walk",
-      petName: "Buddy",
-      duration: "30",
-      location: "Local Park",
-    });
   };
 
-  const handleAddGoal = () => {
-    const goal = {
-      id: isEditMode ? currentEditId : Date.now(),
-      name: newGoal.name,
-      target: newGoal.target,
-      progress: newGoal.progress,
-      icon: newGoal.icon
-    };
-
-    if (isEditMode) {
-      setGoals(prev => prev.map(g => g.id === currentEditId ? goal : g));
-      toast.success(`Goal updated successfully`);
-    } else {
-      setGoals(prev => [...prev, goal]);
-      toast.success(`New goal added`);
+  const handleAddGoal = async () => {
+    try {
+      if (!userId) {
+        toast.error("Please sign in to track goals");
+        return;
+      }
+      
+      if (isEditMode) {
+        const { error } = await supabase
+          .from('pet_goals')
+          .update({
+            name: newGoal.name,
+            target: newGoal.target,
+            progress: newGoal.progress,
+            icon: newGoal.icon
+          })
+          .eq('id', currentEditId);
+          
+        if (error) throw error;
+        
+        toast.success("Goal updated successfully");
+      } else {
+        const { error } = await supabase
+          .from('pet_goals')
+          .insert({
+            user_id: userId,
+            name: newGoal.name,
+            target: newGoal.target,
+            progress: newGoal.progress,
+            icon: newGoal.icon
+          });
+          
+        if (error) throw error;
+        
+        toast.success("New goal added");
+      }
+      
+      // Refresh goals
+      fetchGoals();
+      
+      // Reset form and close dialog
+      setIsNewGoalDialogOpen(false);
+      setIsEditMode(false);
+      setCurrentEditId(null);
+      setNewGoal({
+        name: "",
+        target: "",
+        progress: 0,
+        icon: "🎯"
+      });
+    } catch (error) {
+      console.error('Error adding goal:', error);
+      toast.error('Failed to save goal');
     }
-
-    // Reset form and close dialog
-    setIsNewGoalDialogOpen(false);
-    setIsEditMode(false);
-    setCurrentEditId(null);
-    setNewGoal({
-      name: "",
-      target: "",
-      progress: 0,
-      icon: "🎯"
-    });
   };
 
-  const handleAddNote = () => {
-    const note = {
-      id: isEditMode ? currentEditId : Date.now(),
-      title: newNote.title,
-      content: newNote.content,
-      date: new Date().toLocaleDateString(),
-      tags: newNote.content.match(/#\w+/g) 
+  const handleAddNote = async () => {
+    try {
+      if (!userId) {
+        toast.error("Please sign in to add notes");
+        return;
+      }
+      
+      // Extract tags from content
+      const tags = newNote.content.match(/#\w+/g) 
         ? newNote.content.match(/#\w+/g).map(tag => tag.substring(1)) 
-        : [],
-      image: newNote.image
-    };
-
-    if (isEditMode) {
-      setNotes(prev => prev.map(n => n.id === currentEditId ? note : n));
-      toast.success(`Note updated successfully`);
-    } else {
-      setNotes(prev => [...prev, note]);
-      toast.success(`New note added`);
+        : [];
+      
+      if (isEditMode) {
+        const { error } = await supabase
+          .from('pet_notes')
+          .update({
+            title: newNote.title,
+            content: newNote.content,
+            tags: tags,
+            image: newNote.image
+          })
+          .eq('id', currentEditId);
+          
+        if (error) throw error;
+        
+        toast.success("Note updated successfully");
+      } else {
+        const { error } = await supabase
+          .from('pet_notes')
+          .insert({
+            user_id: userId,
+            title: newNote.title,
+            content: newNote.content,
+            tags: tags,
+            image: newNote.image
+          });
+          
+        if (error) throw error;
+        
+        toast.success("New note added");
+      }
+      
+      // Refresh notes
+      fetchNotes();
+      
+      // Reset form and close dialog
+      setIsNewNoteDialogOpen(false);
+      setIsEditMode(false);
+      setCurrentEditId(null);
+      setNewNote({
+        title: "",
+        content: "",
+        tags: [],
+        image: null
+      });
+    } catch (error) {
+      console.error('Error adding note:', error);
+      toast.error('Failed to save note');
     }
-
-    // Reset form and close dialog
-    setIsNewNoteDialogOpen(false);
-    setIsEditMode(false);
-    setCurrentEditId(null);
-    setNewNote({
-      title: "",
-      content: "",
-      tags: [],
-      image: null
-    });
   };
 
   const handleEditActivity = (activity) => {
@@ -302,20 +473,33 @@ const TrackerPage = () => {
     setCurrentEditId(activity.id);
     setNewActivity({
       type: activity.type,
-      petName: activity.petName,
+      petName: activity.pet_name || activity.petName,
       duration: activity.duration.replace(' min', ''),
       location: activity.location
     });
     setIsNewActivityDialogOpen(true);
   };
 
-  const handleDeleteActivity = (id) => {
-    setActivities(prev => prev.filter(activity => activity.id !== id));
-    toast.info("Activity removed");
-    
-    // Update insights flag if no activities are left
-    if (activities.length <= 1) {
-      setHasInsights(false);
+  const handleDeleteActivity = async (id) => {
+    try {
+      const { error } = await supabase
+        .from('pet_activities')
+        .delete()
+        .eq('id', id);
+        
+      if (error) throw error;
+      
+      // Update activities state
+      setActivities(prev => prev.filter(activity => activity.id !== id));
+      toast.info("Activity removed");
+      
+      // Update insights flag if no activities are left
+      if (activities.length <= 1) {
+        setHasInsights(false);
+      }
+    } catch (error) {
+      console.error('Error deleting activity:', error);
+      toast.error('Failed to delete activity');
     }
   };
 
@@ -331,9 +515,22 @@ const TrackerPage = () => {
     setIsNewGoalDialogOpen(true);
   };
 
-  const handleDeleteGoal = (id) => {
-    setGoals(prev => prev.filter(goal => goal.id !== id));
-    toast.info("Goal removed");
+  const handleDeleteGoal = async (id) => {
+    try {
+      const { error } = await supabase
+        .from('pet_goals')
+        .delete()
+        .eq('id', id);
+        
+      if (error) throw error;
+      
+      // Update goals state
+      setGoals(prev => prev.filter(goal => goal.id !== id));
+      toast.info("Goal removed");
+    } catch (error) {
+      console.error('Error deleting goal:', error);
+      toast.error('Failed to delete goal');
+    }
   };
 
   const handleEditNote = (note) => {
@@ -342,15 +539,28 @@ const TrackerPage = () => {
     setNewNote({
       title: note.title,
       content: note.content,
-      tags: note.tags,
+      tags: note.tags || [],
       image: note.image
     });
     setIsNewNoteDialogOpen(true);
   };
 
-  const handleDeleteNote = (id) => {
-    setNotes(prev => prev.filter(note => note.id !== id));
-    toast.info("Note removed");
+  const handleDeleteNote = async (id) => {
+    try {
+      const { error } = await supabase
+        .from('pet_notes')
+        .delete()
+        .eq('id', id);
+        
+      if (error) throw error;
+      
+      // Update notes state
+      setNotes(prev => prev.filter(note => note.id !== id));
+      toast.info("Note removed");
+    } catch (error) {
+      console.error('Error deleting note:', error);
+      toast.error('Failed to delete note');
+    }
   };
 
   const handleImageUpload = (e) => {
@@ -385,7 +595,7 @@ const TrackerPage = () => {
         </Button>
       </div>
 
-      <Tabs defaultValue="activities" className="w-full">
+      <Tabs defaultValue={activeTab} value={activeTab} className="w-full">
         <TabsList className="grid grid-cols-3 mb-4">
           <TabsTrigger value="activities" onClick={() => setActiveTab("activities")}>Activities</TabsTrigger>
           <TabsTrigger value="goals" onClick={() => setActiveTab("goals")}>Goals</TabsTrigger>
@@ -393,7 +603,11 @@ const TrackerPage = () => {
         </TabsList>
         
         <TabsContent value="activities" className="space-y-4">
-          {activities.length === 0 ? (
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <p>Loading activities...</p>
+            </div>
+          ) : activities.length === 0 ? (
             <Card>
               <CardContent className="p-0">
                 <EmptyState 
@@ -457,7 +671,11 @@ const TrackerPage = () => {
             </Button>
           </div>
           
-          {goals.length === 0 ? (
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <p>Loading goals...</p>
+            </div>
+          ) : goals.length === 0 ? (
             <Card>
               <CardContent className="p-0">
                 <EmptyState 
@@ -509,7 +727,11 @@ const TrackerPage = () => {
             </Button>
           </div>
           
-          {notes.length === 0 ? (
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <p>Loading notes...</p>
+            </div>
+          ) : notes.length === 0 ? (
             <Card>
               <CardContent className="p-0">
                 <EmptyState 
