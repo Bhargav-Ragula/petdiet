@@ -3,14 +3,26 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Activity, Calendar, Plus, Clock, MapPin, BarChart3, FileText, X } from "lucide-react";
+import { Activity, Calendar, Plus, Clock, MapPin, FileText, ChevronLeft } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { 
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import AnalyticsWidget from "@/components/widgets/AnalyticsWidget";
 
 // Mock data for recent activities
@@ -98,17 +110,6 @@ const notesData = [
     tags: ["nutrition", "health"]
   }
 ];
-
-// Widget types
-type WidgetType = "tracker" | "analytics" | "notes" | "goals";
-
-// Widget definition
-interface Widget {
-  id: string;
-  type: WidgetType;
-  title: string;
-  icon: JSX.Element;
-}
 
 const ActivityCard = ({ activity }: { activity: typeof recentActivities[0] }) => (
   <Card className="mb-3">
@@ -200,107 +201,20 @@ const NotesWidget = () => (
 );
 
 const TrackerPage = () => {
-  const [widgets, setWidgets] = useState<Widget[]>([
-    { 
-      id: "tracker-1", 
-      type: "tracker", 
-      title: "Recent Activities", 
-      icon: <Activity size={16} />
-    }
-  ]);
+  const [activeTab, setActiveTab] = useState("activities");
+  const [isNewActivityDialogOpen, setIsNewActivityDialogOpen] = useState(false);
+  const [newActivity, setNewActivity] = useState({
+    type: "Walk",
+    petName: "Buddy",
+    duration: "30",
+    location: "Local Park",
+  });
 
-  const addWidget = (type: WidgetType) => {
-    const newWidget: Widget = {
-      id: `${type}-${Date.now()}`,
-      type,
-      title: type === "tracker" 
-        ? "Recent Activities" 
-        : type === "analytics" 
-          ? "Activity Analytics" 
-          : type === "notes" 
-            ? "Pet Notes" 
-            : "Pet Goals",
-      icon: type === "tracker" 
-        ? <Activity size={16} />
-        : type === "analytics" 
-          ? <BarChart3 size={16} />
-          : type === "notes" 
-            ? <FileText size={16} />
-            : <Calendar size={16} />
-    };
-    setWidgets([...widgets, newWidget]);
-    toast.success(`Added ${newWidget.title} widget`);
-  };
-
-  const removeWidget = (id: string) => {
-    setWidgets(widgets.filter(widget => widget.id !== id));
-    toast.info("Widget removed");
-  };
-
-  const renderWidget = (widget: Widget) => {
-    switch(widget.type) {
-      case "tracker":
-        return (
-          <div className="space-y-4" key={widget.id}>
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-medium">{widget.title}</h3>
-              <Button variant="ghost" size="icon" onClick={() => removeWidget(widget.id)}>
-                <X size={16} />
-              </Button>
-            </div>
-            {recentActivities.map(activity => (
-              <ActivityCard key={activity.id} activity={activity} />
-            ))}
-            <div className="text-center py-3">
-              <Button variant="outline" className="w-full" size="sm">
-                View All Activities
-              </Button>
-            </div>
-          </div>
-        );
-      case "analytics":
-        return (
-          <div className="space-y-4" key={widget.id}>
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-medium">{widget.title}</h3>
-              <Button variant="ghost" size="icon" onClick={() => removeWidget(widget.id)}>
-                <X size={16} />
-              </Button>
-            </div>
-            <AnalyticsWidget data={analyticsData} title="Activity Analytics" description="Daily activity minutes" />
-          </div>
-        );
-      case "notes":
-        return (
-          <div className="space-y-4" key={widget.id}>
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-medium">{widget.title}</h3>
-              <Button variant="ghost" size="icon" onClick={() => removeWidget(widget.id)}>
-                <X size={16} />
-              </Button>
-            </div>
-            <NotesWidget />
-          </div>
-        );
-      case "goals":
-        return (
-          <div className="space-y-4" key={widget.id}>
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-medium">{widget.title}</h3>
-              <Button variant="ghost" size="icon" onClick={() => removeWidget(widget.id)}>
-                <X size={16} />
-              </Button>
-            </div>
-            <div className="space-y-3">
-              {goals.map(goal => (
-                <GoalCard key={goal.id} goal={goal} />
-              ))}
-            </div>
-          </div>
-        );
-      default:
-        return null;
-    }
+  const handleAddActivity = () => {
+    // In a real app, this would add the activity to a database
+    // For now, we'll just show a success message
+    toast.success(`New ${newActivity.type} activity added`);
+    setIsNewActivityDialogOpen(false);
   };
 
   return (
@@ -310,63 +224,133 @@ const TrackerPage = () => {
         <p className="text-muted-foreground">Track your pet's activities & goals</p>
       </div>
       
-      <div className="flex justify-between items-center">
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button>
-              <Plus size={18} className="mr-1" /> Add Widget
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-56">
-            <div className="space-y-2">
-              <h3 className="font-medium">Add Widget</h3>
-              <p className="text-sm text-muted-foreground">Choose a widget type to add to your dashboard</p>
-              <div className="grid grid-cols-1 gap-2 pt-2">
-                <Button 
-                  variant="outline" 
-                  className="justify-start"
-                  onClick={() => addWidget("tracker")}
-                >
-                  <Activity className="mr-2" size={16} />
-                  Activity Tracker
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="justify-start"
-                  onClick={() => addWidget("analytics")}
-                >
-                  <BarChart3 className="mr-2" size={16} />
-                  Analytics
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="justify-start"
-                  onClick={() => addWidget("notes")}
-                >
-                  <FileText className="mr-2" size={16} />
-                  Notes
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="justify-start"
-                  onClick={() => addWidget("goals")}
-                >
-                  <Calendar className="mr-2" size={16} />
-                  Goals
-                </Button>
-              </div>
-            </div>
-          </PopoverContent>
-        </Popover>
-        
-        <Button className="bg-primary hover:bg-primary/90">
+      <div className="flex justify-end">
+        <Button className="bg-primary hover:bg-primary/90" onClick={() => setIsNewActivityDialogOpen(true)}>
           <Plus size={18} className="mr-1" /> New Activity
         </Button>
       </div>
 
-      <div className="space-y-8">
-        {widgets.map(renderWidget)}
-      </div>
+      <Tabs defaultValue="activities" className="w-full">
+        <TabsList className="grid grid-cols-3 mb-4">
+          <TabsTrigger value="activities">Activities</TabsTrigger>
+          <TabsTrigger value="goals">Goals</TabsTrigger>
+          <TabsTrigger value="notes">Notes</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="activities" className="space-y-4">
+          <div className="mb-4">
+            <AnalyticsWidget 
+              data={analyticsData} 
+              title="Activity Overview" 
+              description="Daily activity minutes"
+              showViewDetails={false}
+            />
+          </div>
+          
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Recent Activities</h3>
+            {recentActivities.map(activity => (
+              <ActivityCard key={activity.id} activity={activity} />
+            ))}
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="goals" className="space-y-4">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-medium">Current Goals</h3>
+            <Button variant="outline" size="sm">
+              <Plus size={16} className="mr-1" /> Add Goal
+            </Button>
+          </div>
+          
+          <div className="space-y-3">
+            {goals.map(goal => (
+              <GoalCard key={goal.id} goal={goal} />
+            ))}
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="notes" className="space-y-4">
+          <NotesWidget />
+        </TabsContent>
+      </Tabs>
+      
+      {/* New Activity Dialog */}
+      <Dialog open={isNewActivityDialogOpen} onOpenChange={setIsNewActivityDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New Activity</DialogTitle>
+            <DialogDescription>
+              Record a new activity for your pet
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="activity-type">Activity Type</Label>
+              <Select 
+                defaultValue={newActivity.type}
+                onValueChange={(value) => setNewActivity({...newActivity, type: value})}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select activity type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Walk">Walk</SelectItem>
+                  <SelectItem value="Play">Play</SelectItem>
+                  <SelectItem value="Training">Training</SelectItem>
+                  <SelectItem value="Grooming">Grooming</SelectItem>
+                  <SelectItem value="Vet Visit">Vet Visit</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="pet-name">Pet</Label>
+              <Select 
+                defaultValue={newActivity.petName}
+                onValueChange={(value) => setNewActivity({...newActivity, petName: value})}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select pet" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Buddy">Buddy</SelectItem>
+                  <SelectItem value="Luna">Luna</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="duration">Duration (minutes)</Label>
+              <Input 
+                id="duration" 
+                type="number"
+                value={newActivity.duration} 
+                onChange={(e) => setNewActivity({...newActivity, duration: e.target.value})}
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="location">Location</Label>
+              <Input 
+                id="location" 
+                value={newActivity.location} 
+                onChange={(e) => setNewActivity({...newActivity, location: e.target.value})}
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsNewActivityDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddActivity}>
+              Add Activity
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

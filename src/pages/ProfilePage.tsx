@@ -4,7 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Bell, Settings, ChevronRight, User, Heart, Dog, Cat, Shield, LogOut } from "lucide-react";
+import { Bell, Settings, ChevronRight, User, Heart, Dog, Cat, Shield, LogOut, X, Check, Pencil } from "lucide-react";
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 
 // Mock user data
 const userData = {
@@ -41,7 +52,16 @@ const preferences = [
 ];
 
 const ProfilePage = () => {
-  const [activeTab, setActiveTab] = useState("profile");
+  const [activeTab, setActiveTab] = useState("pets");
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editedUserData, setEditedUserData] = useState({ ...userData });
+
+  const handleSaveProfile = () => {
+    // In a real app, this would send the data to an API
+    // For now, we'll just show a success message
+    toast.success("Profile updated successfully!");
+    setIsEditDialogOpen(false);
+  };
 
   return (
     <div className="py-6 space-y-6">
@@ -59,6 +79,9 @@ const ProfilePage = () => {
           <h2 className="text-xl font-semibold">{userData.name}</h2>
           <p className="text-sm text-muted-foreground">Member since {userData.joinedDate}</p>
         </div>
+        <Button variant="outline" size="sm" className="ml-auto" onClick={() => setIsEditDialogOpen(true)}>
+          <Pencil size={14} className="mr-1" /> Edit Profile
+        </Button>
       </div>
 
       <Tabs defaultValue="pets" className="w-full">
@@ -146,14 +169,8 @@ const ProfilePage = () => {
                     <div className="absolute w-4 h-4 rounded-full bg-white top-0.5 left-0.5"></div>
                   </div>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span>Public Profile</span>
-                  <div className="w-9 h-5 rounded-full relative bg-primary">
-                    <div className="absolute w-4 h-4 rounded-full bg-white top-0.5 right-0.5"></div>
-                  </div>
-                </div>
                 <p className="text-xs text-muted-foreground mt-2">
-                  Privacy settings control how your information is displayed to other users in the app.
+                  Privacy settings control how your information is used within the app.
                 </p>
               </div>
             </CardContent>
@@ -182,7 +199,7 @@ const ProfilePage = () => {
               </div>
             </CardContent>
             <CardFooter>
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full" onClick={() => setIsEditDialogOpen(true)}>
                 Edit Profile
               </Button>
             </CardFooter>
@@ -195,6 +212,55 @@ const ProfilePage = () => {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Edit Profile Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Profile</DialogTitle>
+            <DialogDescription>
+              Make changes to your profile here. Click save when you're done.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="flex items-center space-x-4">
+              <Avatar className="h-16 w-16 border-2 border-primary">
+                <AvatarImage src={editedUserData.avatarUrl} alt={editedUserData.name} />
+                <AvatarFallback>{editedUserData.name.charAt(0)}</AvatarFallback>
+              </Avatar>
+              <Button size="sm" variant="outline">Change Avatar</Button>
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="name">Name</Label>
+              <Input 
+                id="name" 
+                value={editedUserData.name} 
+                onChange={(e) => setEditedUserData({...editedUserData, name: e.target.value})} 
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="email">Email</Label>
+              <Input 
+                id="email" 
+                value={editedUserData.email} 
+                onChange={(e) => setEditedUserData({...editedUserData, email: e.target.value})} 
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              <X size={14} className="mr-1" /> Cancel
+            </Button>
+            <Button onClick={handleSaveProfile}>
+              <Check size={14} className="mr-1" /> Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

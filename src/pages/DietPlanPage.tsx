@@ -1,558 +1,467 @@
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription } from "@/components/ui/form";
+import { ChevronLeft, Loader2 } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { toast } from "sonner";
-import { 
-  ArrowLeft, 
-  Loader2, 
-  AlertCircle, 
-  PawPrint, 
-  Activity, 
-  Apple, 
-  Heart,
-  Clock,
-  Sun,
-  Coffee,
-  Sunset,
-  Moon,
-  CalendarCheck,
-  Utensils,
-  Dog,
-  Cat
-} from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import * as z from "zod";
+import { Slider } from "@/components/ui/slider";
+import { Progress } from "@/components/ui/progress";
 
-const petTypes = ["Dog", "Cat", "Bird", "Fish", "Hamster", "Rabbit", "Other"];
-const activityLevels = ["Low", "Moderate", "High", "Very High"];
-
+// Form schema
 const formSchema = z.object({
-  petType: z.string().min(1, { message: "Pet type is required" }),
-  breed: z.string().min(1, { message: "Breed is required" }),
-  age: z.string().min(1, { message: "Age is required" }),
-  weight: z.string().min(1, { message: "Weight is required" }),
-  activityLevel: z.string().min(1, { message: "Activity level is required" }),
+  petName: z.string().min(1, "Pet name is required"),
+  petType: z.string().min(1, "Pet type is required"),
+  petAge: z.string().min(1, "Pet age is required"),
+  petWeight: z.string().min(1, "Pet weight is required"),
+  activityLevel: z.number().min(1).max(5),
+  allergies: z.string().optional(),
   dietaryRestrictions: z.string().optional(),
+  currentDiet: z.string().optional(),
 });
+
+type FormValues = z.infer<typeof formSchema>;
+
+// Pet types options
+const petTypes = [
+  { value: "dog", label: "Dog" },
+  { value: "cat", label: "Cat" },
+  { value: "bird", label: "Bird" },
+  { value: "rabbit", label: "Rabbit" },
+  { value: "hamster", label: "Hamster" },
+  { value: "other", label: "Other" },
+];
+
+// Age groups
+const ageGroups = [
+  { value: "puppy", label: "Puppy/Kitten (0-1 year)" },
+  { value: "young", label: "Young (1-3 years)" },
+  { value: "adult", label: "Adult (3-7 years)" },
+  { value: "senior", label: "Senior (7+ years)" },
+];
 
 const DietPlanPage = () => {
   const navigate = useNavigate();
+  const [step, setStep] = useState(1);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [dietPlan, setDietPlan] = useState<string | null>(null);
-  const [isFromFallback, setIsFromFallback] = useState(false);
-  const [petDetails, setPetDetails] = useState<Record<string, string> | null>(null);
-
-  const form = useForm<z.infer<typeof formSchema>>({
+  
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      petName: "",
       petType: "",
-      breed: "",
-      age: "",
-      weight: "",
-      activityLevel: "",
+      petAge: "",
+      petWeight: "",
+      activityLevel: 3,
+      allergies: "",
       dietaryRestrictions: "",
+      currentDiet: "",
     },
   });
 
-  function getPetIcon(petType: string) {
-    switch(petType?.toLowerCase()) {
-      case 'dog': return <Dog className="h-6 w-6 mr-2" />;
-      case 'cat': return <Cat className="h-6 w-6 mr-2" />;
-      default: return <PawPrint className="h-6 w-6 mr-2" />;
-    }
-  }
-
-  // Parse the diet plan sections from markdown-like text
-  const parsePlanSections = (planText: string) => {
-    if (!planText) return { header: "", sections: [] };
-
-    const lines = planText.split('\n');
-    let header = '';
-    const sections: { title: string, content: string[], isSchedule: boolean }[] = [];
-    let currentSection: { title: string, content: string[], isSchedule: boolean } | null = null;
-
-    lines.forEach(line => {
-      if (line.startsWith('# ')) {
-        header = line.replace('# ', '');
-      } else if (line.startsWith('## ')) {
-        if (currentSection) sections.push(currentSection);
-        const title = line.replace('## ', '');
-        const isSchedule = title.includes('Schedule') || title.includes('Daily') || 
-                          title.includes('Morning') || title.includes('Evening');
-        currentSection = { title, content: [], isSchedule };
-      } else if (currentSection) {
-        currentSection.content.push(line);
-      }
-    });
-
-    if (currentSection) sections.push(currentSection);
-    return { header, sections };
-  };
-
-  // Render a time-based schedule section
-  const renderScheduleSection = (section: { title: string, content: string[] }) => {
-    const timeBlocks: { time: string, icon: JSX.Element, title: string, items: string[] }[] = [];
-    let currentTime = '';
-    let currentItems: string[] = [];
-
-    section.content.forEach(line => {
-      if (line.startsWith('### 🌅 Morning')) {
-        currentTime = line.replace('### 🌅 Morning', '').trim();
-        currentItems = [];
-      } else if (line.startsWith('### 🕛 Midday')) {
-        if (currentTime) {
-          timeBlocks.push({ 
-            time: currentTime, 
-            icon: <Sun className="h-5 w-5 text-yellow-500" />, 
-            title: 'Morning', 
-            items: [...currentItems] 
-          });
-        }
-        currentTime = line.replace('### 🕛 Midday', '').trim();
-        currentItems = [];
-      } else if (line.startsWith('### 🌇 Afternoon')) {
-        if (currentTime) {
-          timeBlocks.push({ 
-            time: currentTime, 
-            icon: <Coffee className="h-5 w-5 text-amber-600" />, 
-            title: 'Midday', 
-            items: [...currentItems] 
-          });
-        }
-        currentTime = line.replace('### 🌇 Afternoon', '').trim();
-        currentItems = [];
-      } else if (line.startsWith('### 🌙 Evening')) {
-        if (currentTime) {
-          timeBlocks.push({ 
-            time: currentTime, 
-            icon: <Sunset className="h-5 w-5 text-orange-500" />, 
-            title: 'Afternoon', 
-            items: [...currentItems] 
-          });
-        }
-        currentTime = line.replace('### 🌙 Evening', '').trim();
-        currentItems = [];
-      } else if (line.startsWith('### 🌠 Night')) {
-        if (currentTime) {
-          timeBlocks.push({ 
-            time: currentTime, 
-            icon: <Moon className="h-5 w-5 text-indigo-400" />, 
-            title: 'Evening', 
-            items: [...currentItems] 
-          });
-        }
-        currentTime = line.replace('### 🌠 Night', '').trim();
-        currentItems = [];
-      } else if (line.trim() !== '') {
-        // Handle items (bullet points or regular text)
-        const cleanedLine = line.replace(/^- /, '');
-        if (cleanedLine) {
-          currentItems.push(cleanedLine);
-        }
-      }
-    });
-
-    // Add the last time block
-    if (currentTime) {
-      timeBlocks.push({ 
-        time: currentTime, 
-        icon: currentTime.includes('Night') ? 
-          <Moon className="h-5 w-5 text-blue-900" /> : 
-          <Moon className="h-5 w-5 text-indigo-400" />, 
-        title: currentTime.includes('Night') ? 'Night' : 'Evening', 
-        items: [...currentItems] 
-      });
-    }
-
-    return (
-      <div className="space-y-4 mt-3">
-        {timeBlocks.map((block, idx) => (
-          <Card key={idx} className="overflow-hidden border-l-4 border-l-primary/60">
-            <CardHeader className="py-3 bg-muted/50 flex flex-row items-center">
-              <div className="mr-3 bg-background rounded-full p-2">
-                {block.icon}
-              </div>
-              <div>
-                <CardTitle className="text-base flex items-center">
-                  <Clock className="h-4 w-4 mr-1 text-muted-foreground" /> 
-                  {block.title} {block.time}
-                </CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent className="py-3">
-              <ul className="space-y-1 list-disc pl-5 text-sm">
-                {block.items.map((item, i) => (
-                  <li key={i} className="text-muted-foreground">{item}</li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
-  };
-
-  // Render a regular content section
-  const renderContentSection = (section: { title: string, content: string[] }) => {
-    return (
-      <div className="mt-3">
-        <div className="flex items-center mb-2">
-          <CalendarCheck className="h-5 w-5 mr-2 text-primary" />
-          <h3 className="text-lg font-medium">{section.title}</h3>
-        </div>
-        <div className="pl-7 space-y-1">
-          {section.content.map((line, i) => {
-            if (line.trim() === '') return null;
-            
-            if (line.startsWith('- ')) {
-              return <p key={i} className="flex items-start text-muted-foreground text-sm">
-                <span className="mr-2 mt-1.5 h-1 w-1 rounded-full bg-primary/70 flex-shrink-0"></span>
-                <span>{line.replace(/^- /, '')}</span>
-              </p>;
-            }
-            
-            return <p key={i} className="text-muted-foreground text-sm">{line}</p>;
-          })}
-        </div>
-      </div>
-    );
-  };
-
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: FormValues) => {
+    console.log(values);
     setIsGenerating(true);
-    setDietPlan(null);
-    setIsFromFallback(false);
-    setPetDetails(null);
     
-    try {
-      const { data, error } = await supabase.functions.invoke('generate-diet-plan', {
-        body: {
-          petType: values.petType,
-          breed: values.breed,
-          age: values.age,
-          weight: values.weight,
-          activityLevel: values.activityLevel,
-          dietaryRestrictions: values.dietaryRestrictions,
-        },
-      });
-
-      if (error) {
-        toast.error("Failed to generate diet plan");
-        console.error("Function error:", error);
-        return;
-      }
-
-      setDietPlan(data.dietPlan);
-      setPetDetails(data.metadata);
-      
-      // Check if the response was generated by the fallback
-      if (data.generatedBy === "fallback") {
-        setIsFromFallback(true);
-        toast.warning("Used fallback diet plan due to API limitations", {
-          description: "The diet plan was generated locally as a fallback."
-        });
-      } else {
-        toast.success("Diet plan generated successfully!");
-      }
-    } catch (error) {
-      console.error("Error generating diet plan:", error);
-      toast.error("Something went wrong. Please try again.");
-    } finally {
+    // Simulate API delay
+    setTimeout(() => {
       setIsGenerating(false);
+      setStep(3);
+    }, 3000);
+  };
+
+  const handleBackToDashboard = () => {
+    navigate('/');
+  };
+
+  const handleBack = () => {
+    if (step > 1) {
+      setStep(step - 1);
+    } else {
+      navigate('/');
     }
   };
 
-  return (
-    <div className="py-8 max-w-4xl mx-auto px-4 sm:px-6">
-      <div className="flex items-center mb-8">
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="mr-2">
-          <ArrowLeft size={20} />
-        </Button>
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">
-          AI Pet Diet Plan
-        </h1>
-      </div>
+  // Define activity level labels
+  const activityLabels = ["Very Low", "Low", "Moderate", "High", "Very High"];
 
-      {!dietPlan ? (
-        <div className="grid gap-6 md:grid-cols-5">
-          <div className="md:col-span-2 space-y-4">
-            <Card className="bg-gradient-to-br from-background to-muted border-0 shadow-lg">
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-xl">
-                  <PawPrint className="h-5 w-5 text-primary" />
-                  Why Diet Matters
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  A tailored diet plan ensures your pet gets the right nutrition 
-                  based on their specific needs, promoting better health, energy,
-                  and longevity.
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-gradient-to-br from-background to-muted border-0 shadow-lg">
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-xl">
-                  <Activity className="h-5 w-5 text-secondary" />
-                  Activity & Nutrition
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Active pets need more calories and protein, while less active 
-                  ones require fewer calories to maintain a healthy weight.
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-gradient-to-br from-background to-muted border-0 shadow-lg">
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-xl">
-                  <Apple className="h-5 w-5 text-green-500" />
-                  Balanced Diet Benefits
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  A balanced diet helps prevent obesity, supports the immune system,
-                  promotes healthy skin and coat, and reduces the risk of digestive issues.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-          
-          <Card className="md:col-span-3 border-0 shadow-lg bg-card">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Heart className="h-5 w-5 text-primary" />
-                Enter Your Pet's Details
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="petType"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Pet Type</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="bg-background">
-                              <SelectValue placeholder="Select pet type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {petTypes.map((type) => (
-                              <SelectItem key={type} value={type}>
-                                {type}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </FormItem>
-                    )}
-                  />
+  // Basic information step
+  const BasicInformationStep = () => (
+    <div className="space-y-4">
+      <FormField
+        control={form.control}
+        name="petName"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Pet Name</FormLabel>
+            <FormControl>
+              <Input placeholder="Enter your pet's name" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      
+      <FormField
+        control={form.control}
+        name="petType"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Pet Type</FormLabel>
+            <Select 
+              onValueChange={field.onChange}
+              defaultValue={field.value}
+            >
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select pet type" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {petTypes.map((type) => (
+                  <SelectItem key={type.value} value={type.value}>
+                    {type.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
 
-                  <FormField
-                    control={form.control}
-                    name="breed"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Breed</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter breed" {...field} className="bg-background" />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
+      <FormField
+        control={form.control}
+        name="petAge"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Age Group</FormLabel>
+            <Select 
+              onValueChange={field.onChange}
+              defaultValue={field.value}
+            >
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select age group" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {ageGroups.map((age) => (
+                  <SelectItem key={age.value} value={age.value}>
+                    {age.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="age"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Age (Years)</FormLabel>
-                          <FormControl>
-                            <Input type="number" placeholder="Enter age" {...field} className="bg-background" />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
+      <FormField
+        control={form.control}
+        name="petWeight"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Weight (in kg)</FormLabel>
+            <FormControl>
+              <Input type="number" placeholder="Enter weight" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    </div>
+  );
 
-                    <FormField
-                      control={form.control}
-                      name="weight"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Weight (lbs)</FormLabel>
-                          <FormControl>
-                            <Input type="number" placeholder="Enter weight" {...field} className="bg-background" />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <FormField
-                    control={form.control}
-                    name="activityLevel"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Activity Level</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="bg-background">
-                              <SelectValue placeholder="Select activity level" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {activityLevels.map((level) => (
-                              <SelectItem key={level} value={level}>
-                                {level}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="dietaryRestrictions"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Dietary Restrictions/Special Notes</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Any allergies, health concerns, or preferences? (optional)" 
-                            className="resize-none bg-background" 
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Include any allergies, health concerns or preferences your pet has
-                        </FormDescription>
-                      </FormItem>
-                    )}
-                  />
-
-                  <Button 
-                    type="submit" 
-                    className="w-full font-semibold"
-                    disabled={isGenerating}
-                  >
-                    {isGenerating ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Generating Diet Plan...
-                      </>
-                    ) : (
-                      "Generate Diet Plan"
-                    )}
-                  </Button>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
-        </div>
-      ) : (
-        <Card className="border-0 shadow-lg overflow-hidden">
-          <CardHeader className="bg-gradient-to-r from-orange-100 to-amber-50">
-            <div className="flex items-center gap-4">
-              <div className="bg-white/80 rounded-full p-3 shadow-sm">
-                {getPetIcon(petDetails?.petType || '')}
-              </div>
-              <div>
-                <div className="flex items-center justify-between w-full">
-                  <CardTitle className="flex items-center">
-                    <Utensils className="h-6 w-6 text-primary mr-2" />
-                    Pet Diet Plan
-                    {isFromFallback && (
-                      <div className="ml-4 flex items-center text-amber-500 text-sm font-normal bg-amber-50 px-3 py-1 rounded-full">
-                        <AlertCircle size={16} className="mr-1" />
-                        Fallback Plan
-                      </div>
-                    )}
-                  </CardTitle>
-                </div>
-                <CardDescription className="flex items-center gap-1 mt-1">
-                  {petDetails && (
-                    <>
-                      <span className="bg-background/80 px-2 py-0.5 rounded-full text-xs">
-                        {petDetails.breed}
-                      </span>
-                      <span className="bg-background/80 px-2 py-0.5 rounded-full text-xs">
-                        {petDetails.age} years
-                      </span>
-                      <span className="bg-background/80 px-2 py-0.5 rounded-full text-xs">
-                        {petDetails.weight} lbs
-                      </span>
-                      <span className="bg-background/80 px-2 py-0.5 rounded-full text-xs">
-                        {petDetails.activityLevel} activity
-                      </span>
-                    </>
-                  )}
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          
-          <CardContent className="pt-6 px-6">
-            {(() => {
-              const { header, sections } = parsePlanSections(dietPlan);
-              return (
-                <div className="prose max-w-none">
-                  {sections.map((section, index) => (
-                    <div key={index} className="mb-6 pb-6 border-b last:border-b-0">
-                      {section.isSchedule ? 
-                        renderScheduleSection(section) : 
-                        renderContentSection(section)}
-                    </div>
+  // Diet preferences step
+  const DietPreferencesStep = () => (
+    <div className="space-y-4">
+      <FormField
+        control={form.control}
+        name="activityLevel"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Activity Level</FormLabel>
+            <FormControl>
+              <div className="space-y-2">
+                <Slider
+                  min={1}
+                  max={5}
+                  step={1}
+                  defaultValue={[field.value]}
+                  onValueChange={(vals) => field.onChange(vals[0])}
+                />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  {activityLabels.map((label, i) => (
+                    <span key={i} className={i + 1 === field.value ? "font-bold text-primary" : ""}>
+                      {label}
+                    </span>
                   ))}
                 </div>
-              );
-            })()}
-          </CardContent>
-          
-          <CardFooter className="flex flex-col sm:flex-row gap-3 justify-between bg-muted/30 px-6 py-4">
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                setDietPlan(null);
-                setPetDetails(null);
-              }}
-              className="w-full sm:w-auto"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Edit Pet Details
-            </Button>
-            <Button 
-              onClick={() => window.print()} 
-              className="print:hidden w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground"
-            >
-              Print Diet Plan
-            </Button>
-          </CardFooter>
-        </Card>
-      )}
+              </div>
+            </FormControl>
+            <FormDescription>
+              How active is your pet on a daily basis?
+            </FormDescription>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
       
-      <div className="mt-8 text-center text-sm text-muted-foreground">
-        <p>Our AI-generated diet plans are for informational purposes only. Always consult with a veterinarian before making significant changes to your pet's diet.</p>
+      <FormField
+        control={form.control}
+        name="allergies"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Known Allergies</FormLabel>
+            <FormControl>
+              <Textarea 
+                placeholder="E.g., chicken, grains, etc. (Leave blank if none)"
+                {...field}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      
+      <FormField
+        control={form.control}
+        name="dietaryRestrictions"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Dietary Restrictions</FormLabel>
+            <FormControl>
+              <Textarea 
+                placeholder="Any specific dietary needs or restrictions"
+                {...field}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      
+      <FormField
+        control={form.control}
+        name="currentDiet"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Current Diet</FormLabel>
+            <FormControl>
+              <Textarea 
+                placeholder="What does your pet currently eat?"
+                {...field}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    </div>
+  );
+
+  // Generated plan step
+  const GeneratedPlanStep = () => (
+    <Card>
+      <CardHeader>
+        <CardTitle>Personalized Diet Plan for {form.getValues().petName}</CardTitle>
+        <CardDescription>
+          Tailored nutrition based on your pet's needs
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <h3 className="font-medium">Daily Feeding Recommendations</h3>
+          <div className="bg-muted p-3 rounded-md">
+            <p>Based on your pet's profile as a {form.getValues().petAge} {form.getValues().petType} 
+            weighing {form.getValues().petWeight}kg with {activityLabels[form.getValues().activityLevel - 1].toLowerCase()} 
+            activity level:</p>
+            
+            <ul className="list-disc ml-5 mt-2">
+              <li>Morning: 1/2 cup high-quality {form.getValues().petType} food</li>
+              <li>Evening: 1/2 cup high-quality {form.getValues().petType} food with 1 tbsp wet food</li>
+              <li>Daily caloric intake: Approximately 250-300 calories</li>
+              <li>Water: Fresh water available at all times</li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <h3 className="font-medium">Nutritional Breakdown</h3>
+          <div className="space-y-3">
+            <div>
+              <div className="flex justify-between text-sm">
+                <span>Protein</span>
+                <span>30%</span>
+              </div>
+              <Progress value={30} className="h-2 mt-1" />
+            </div>
+            <div>
+              <div className="flex justify-between text-sm">
+                <span>Fats</span>
+                <span>15%</span>
+              </div>
+              <Progress value={15} className="h-2 mt-1" />
+            </div>
+            <div>
+              <div className="flex justify-between text-sm">
+                <span>Carbohydrates</span>
+                <span>45%</span>
+              </div>
+              <Progress value={45} className="h-2 mt-1" />
+            </div>
+            <div>
+              <div className="flex justify-between text-sm">
+                <span>Fiber</span>
+                <span>5%</span>
+              </div>
+              <Progress value={5} className="h-2 mt-1" />
+            </div>
+            <div>
+              <div className="flex justify-between text-sm">
+                <span>Moisture</span>
+                <span>5%</span>
+              </div>
+              <Progress value={5} className="h-2 mt-1" />
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <h3 className="font-medium">Food Recommendations</h3>
+          <div className="space-y-2">
+            <div className="p-2 border rounded-md">
+              <div className="font-medium">Premium Dry Food Options</div>
+              <ul className="list-disc ml-5 mt-1 text-sm">
+                <li>Brand A Grain-Free Formula</li>
+                <li>Brand B Healthy Weight Formula</li>
+                <li>Brand C Natural Balance Formula</li>
+              </ul>
+            </div>
+            <div className="p-2 border rounded-md">
+              <div className="font-medium">Wet Food Supplements</div>
+              <ul className="list-disc ml-5 mt-1 text-sm">
+                <li>Brand X Pâté Style</li>
+                <li>Brand Y Gravy Chunks</li>
+              </ul>
+            </div>
+            <div className="p-2 border rounded-md">
+              <div className="font-medium">Treats (Limited to 10% of daily calories)</div>
+              <ul className="list-disc ml-5 mt-1 text-sm">
+                <li>Dental chews (1 per day)</li>
+                <li>Training treats (5-10 small pieces)</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <h3 className="font-medium">Special Considerations</h3>
+          <p className="text-sm">
+            Based on your input about allergies ({form.getValues().allergies || "none specified"}) 
+            and dietary restrictions ({form.getValues().dietaryRestrictions || "none specified"}), 
+            we've adjusted this plan to avoid potential allergens and meet specific needs.
+          </p>
+        </div>
+      </CardContent>
+      <CardFooter>
+        <Button className="w-full" onClick={handleBackToDashboard}>
+          Save Plan & Return to Dashboard
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+
+  return (
+    <div className="py-6 space-y-6">
+      <div className="flex items-center">
+        <Button variant="ghost" size="icon" onClick={handleBack} className="mr-2">
+          <ChevronLeft size={18} />
+        </Button>
+        <h1 className="text-2xl font-bold text-foreground">Create Pet Diet Plan</h1>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            {step === 1 ? "Basic Information" : 
+             step === 2 ? "Diet Preferences" : 
+             "Generated Diet Plan"}
+          </CardTitle>
+          <CardDescription>
+            {step === 1 ? "Tell us about your pet" : 
+             step === 2 ? "Help us understand your pet's dietary needs" : 
+             "Review your personalized diet plan"}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isGenerating ? (
+            <div className="flex flex-col items-center justify-center py-8 space-y-4">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="text-lg">Generating diet plan...</p>
+              <p className="text-sm text-muted-foreground text-center">
+                Our AI is creating a personalized diet plan for {form.getValues().petName}
+              </p>
+            </div>
+          ) : (
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                {step === 1 && <BasicInformationStep />}
+                {step === 2 && <DietPreferencesStep />}
+                {step === 3 && <GeneratedPlanStep />}
+                
+                {step !== 3 && (
+                  <div className="flex justify-between pt-4">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={handleBack}
+                    >
+                      Back
+                    </Button>
+                    
+                    {step === 1 ? (
+                      <Button 
+                        type="button" 
+                        onClick={() => setStep(2)}
+                      >
+                        Next
+                      </Button>
+                    ) : (
+                      <Button type="submit">
+                        Generate Plan
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </form>
+            </Form>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };

@@ -2,25 +2,17 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Heart, Sparkles, ArrowRight, Lightbulb, Wand2, Utensils, Activity, FileText, Calendar, Plus, X, BarChart3 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Heart, Sparkles, ArrowRight, ChevronLeft, Lightbulb, Wand2, Utensils, Activity, FileText, Calendar, Plus, X } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Progress } from "@/components/ui/progress";
-import { 
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 
 const aiPlanTypes = [
-  { id: "nutrition", name: "Nutrition", icon: "🍖", description: "Dietary plans & feeding schedules" },
   { id: "training", name: "Training", icon: "🎾", description: "Behavior & tricks training"  },
-  { id: "health", name: "Health", icon: "⚕️", description: "Wellness & care routines" },
   { id: "activities", name: "Activities", icon: "🏞️", description: "Exercises & playtime ideas" },
   { id: "grooming", name: "Grooming", icon: "🛁", description: "Cleaning & maintenance tips" },
-  { id: "social", name: "Socialization", icon: "🐩", description: "Interaction with other pets" },
+  { id: "social", name: "Socialization", icon: "🐩", description: "Find nearby pet events" },
 ];
 
 // Mock activity data
@@ -43,53 +35,8 @@ const recentActivities = [
   }
 ];
 
-// Mock analytics data
-const analyticsData = [
-  { day: 'Mon', minutes: 35 },
-  { day: 'Tue', minutes: 20 },
-  { day: 'Wed', minutes: 45 },
-  { day: 'Thu', minutes: 30 },
-  { day: 'Fri', minutes: 60 },
-  { day: 'Sat', minutes: 75 },
-  { day: 'Sun', minutes: 45 },
-];
-
-// Mock notes
-const notesData = [
-  {
-    id: 1,
-    title: "Vaccination Reminder",
-    content: "Buddy's annual vaccines are due next month.",
-    date: "2025-04-10"
-  },
-  {
-    id: 2,
-    title: "New Food Trial",
-    content: "Started grain-free kibble today.",
-    date: "2025-04-15"
-  }
-];
-
-// Mock goals
-const goals = [
-  {
-    id: 1,
-    name: "Daily walk",
-    target: "30 minutes",
-    progress: 75,
-    icon: "🦮"
-  },
-  {
-    id: 2,
-    name: "Weekly playtime",
-    target: "3 hours",
-    progress: 60,
-    icon: "🎾"
-  }
-];
-
 // Widget types
-type WidgetType = "tracker" | "analytics" | "notes" | "goals";
+type WidgetType = "tracker" | "notes" | "goals";
 
 // Widget definition
 interface Widget {
@@ -128,28 +75,21 @@ const ActivityWidget = () => (
   </Card>
 );
 
-const AnalyticsWidget = () => (
-  <Card>
-    <CardHeader>
-      <CardTitle className="text-base">Weekly Activity</CardTitle>
-    </CardHeader>
-    <CardContent>
-      <div className="h-36 flex items-end space-x-2">
-        {analyticsData.map((data, i) => (
-          <div key={i} className="flex flex-col items-center flex-1">
-            <div className="w-full bg-primary/80 rounded-t-sm" style={{ height: `${(data.minutes / 75) * 100}%` }} />
-            <span className="text-xs mt-1">{data.day}</span>
-          </div>
-        ))}
-      </div>
-    </CardContent>
-    <CardFooter>
-      <Button variant="outline" size="sm" className="w-full" onClick={() => window.location.href = "/insights"}>
-        View Details
-      </Button>
-    </CardFooter>
-  </Card>
-);
+// Mock notes
+const notesData = [
+  {
+    id: 1,
+    title: "Vaccination Reminder",
+    content: "Buddy's annual vaccines are due next month.",
+    date: "2025-04-10"
+  },
+  {
+    id: 2,
+    title: "New Food Trial",
+    content: "Started grain-free kibble today.",
+    date: "2025-04-15"
+  }
+];
 
 const NotesWidget = () => (
   <Card>
@@ -172,6 +112,24 @@ const NotesWidget = () => (
     </CardFooter>
   </Card>
 );
+
+// Mock goals
+const goals = [
+  {
+    id: 1,
+    name: "Daily walk",
+    target: "30 minutes",
+    progress: 75,
+    icon: "🦮"
+  },
+  {
+    id: 2,
+    name: "Weekly playtime",
+    target: "3 hours",
+    progress: 60,
+    icon: "🎾"
+  }
+];
 
 const GoalsWidget = () => (
   <Card>
@@ -206,6 +164,7 @@ const GoalsWidget = () => (
 
 const DiscoverPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isGenerating, setIsGenerating] = useState(false);
   const [widgets, setWidgets] = useState<Widget[]>([
     { 
@@ -231,18 +190,14 @@ const DiscoverPage = () => {
       type,
       title: type === "tracker" 
         ? "Recent Activities" 
-        : type === "analytics" 
-          ? "Activity Analytics" 
-          : type === "notes" 
-            ? "Pet Notes" 
-            : "Pet Goals",
+        : type === "notes" 
+          ? "Pet Notes" 
+          : "Pet Goals",
       icon: type === "tracker" 
         ? <Activity size={16} />
-        : type === "analytics" 
-          ? <BarChart3 size={16} />
-          : type === "notes" 
-            ? <FileText size={16} />
-            : <Calendar size={16} />
+        : type === "notes" 
+          ? <FileText size={16} />
+          : <Calendar size={16} />
     };
     setWidgets([...widgets, newWidget]);
     toast.success(`Added ${newWidget.title} widget`);
@@ -268,21 +223,6 @@ const DiscoverPage = () => {
               </Button>
             </div>
             <ActivityWidget />
-          </div>
-        );
-      case "analytics":
-        return (
-          <div className="space-y-4" key={widget.id}>
-            <div className="flex justify-between items-center">
-              <h3 className="text-base font-medium flex items-center">
-                {widget.icon}
-                <span className="ml-2">{widget.title}</span>
-              </h3>
-              <Button variant="ghost" size="icon" onClick={() => removeWidget(widget.id)}>
-                <X size={16} />
-              </Button>
-            </div>
-            <AnalyticsWidget />
           </div>
         );
       case "notes":
@@ -324,59 +264,23 @@ const DiscoverPage = () => {
     <div className="py-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground">
-          <span className="text-primary mr-2">🐾</span> PetPals AI Hub
+          <span className="text-primary mr-2">🐾</span> PetCaring AI
         </h1>
         <p className="text-muted-foreground">Get AI-powered care plans for your pet</p>
       </div>
 
       <div className="flex justify-between items-center">
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline">
-              <Plus size={18} className="mr-1" /> Add Widget
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-56">
-            <div className="space-y-2">
-              <h3 className="font-medium">Add Widget</h3>
-              <p className="text-sm text-muted-foreground">Choose a widget type to add to your dashboard</p>
-              <div className="grid grid-cols-1 gap-2 pt-2">
-                <Button 
-                  variant="outline" 
-                  className="justify-start"
-                  onClick={() => addWidget("tracker")}
-                >
-                  <Activity className="mr-2" size={16} />
-                  Activity Tracker
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="justify-start"
-                  onClick={() => addWidget("analytics")}
-                >
-                  <BarChart3 className="mr-2" size={16} />
-                  Analytics
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="justify-start"
-                  onClick={() => addWidget("notes")}
-                >
-                  <FileText className="mr-2" size={16} />
-                  Notes
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="justify-start"
-                  onClick={() => addWidget("goals")}
-                >
-                  <Calendar className="mr-2" size={16} />
-                  Goals
-                </Button>
-              </div>
-            </div>
-          </PopoverContent>
-        </Popover>
+        <Button variant="outline" onClick={() => addWidget("tracker")}>
+          <Plus size={18} className="mr-1" /> Add Activity Widget
+        </Button>
+        
+        <Button variant="outline" onClick={() => addWidget("notes")}>
+          <FileText size={18} className="mr-1" /> Add Notes Widget
+        </Button>
+        
+        <Button variant="outline" onClick={() => addWidget("goals")}>
+          <Calendar size={18} className="mr-1" /> Add Goals Widget
+        </Button>
         
         <Button onClick={() => navigate("/tracker")}>
           View All Trackers
@@ -405,7 +309,7 @@ const DiscoverPage = () => {
           </h2>
         </div>
         <p className="text-sm text-muted-foreground">Select a plan type to generate personalized care guidance for your pet</p>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-2">
           {aiPlanTypes.map(type => (
             <button
               key={type.id}

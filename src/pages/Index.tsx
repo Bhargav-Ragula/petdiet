@@ -1,18 +1,13 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Activity, BarChart3, Calendar, FileText, Plus, X } from "lucide-react";
+import { Activity, Calendar, FileText, Plus, X } from "lucide-react";
 import { toast } from "sonner";
-import { 
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { useNavigate } from "react-router-dom";
 import AnalyticsWidget from "@/components/widgets/AnalyticsWidget";
 
 // Widget types
-type WidgetType = "tracker" | "analytics" | "notes" | "goals";
+type WidgetType = "tracker" | "notes" | "goals";
 
 // Widget definition
 interface Widget {
@@ -186,18 +181,14 @@ const Index = () => {
       type,
       title: type === "tracker" 
         ? "Recent Activities" 
-        : type === "analytics" 
-          ? "Activity Analytics" 
-          : type === "notes" 
-            ? "Pet Notes" 
-            : "Pet Goals",
+        : type === "notes" 
+          ? "Pet Notes" 
+          : "Pet Goals",
       icon: type === "tracker" 
         ? <Activity size={16} />
-        : type === "analytics" 
-          ? <BarChart3 size={16} />
-          : type === "notes" 
-            ? <FileText size={16} />
-            : <Calendar size={16} />
+        : type === "notes" 
+          ? <FileText size={16} />
+          : <Calendar size={16} />
     };
     setWidgets([...widgets, newWidget]);
     toast.success(`Added ${newWidget.title} widget`);
@@ -223,21 +214,6 @@ const Index = () => {
               </Button>
             </div>
             <ActivityWidget />
-          </div>
-        );
-      case "analytics":
-        return (
-          <div className="space-y-4" key={widget.id}>
-            <div className="flex justify-between items-center">
-              <h3 className="text-base font-medium flex items-center">
-                {widget.icon}
-                <span className="ml-2">{widget.title}</span>
-              </h3>
-              <Button variant="ghost" size="icon" onClick={() => removeWidget(widget.id)}>
-                <X size={16} />
-              </Button>
-            </div>
-            <AnalyticsWidget data={analyticsData} compact={true} />
           </div>
         );
       case "notes":
@@ -279,59 +255,28 @@ const Index = () => {
     <div className="py-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground">
-          <span className="text-primary mr-2">🐾</span> PetPals Dashboard
+          <span className="text-primary mr-2">🐾</span> PetCaring AI Dashboard
         </h1>
         <p className="text-muted-foreground">Customize your home screen</p>
       </div>
       
       <div className="flex justify-between items-center">
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline">
-              <Plus size={18} className="mr-1" /> Add Widget
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-56">
-            <div className="space-y-2">
-              <h3 className="font-medium">Add Widget</h3>
-              <p className="text-sm text-muted-foreground">Choose a widget type to add to your dashboard</p>
-              <div className="grid grid-cols-1 gap-2 pt-2">
-                <Button 
-                  variant="outline" 
-                  className="justify-start"
-                  onClick={() => addWidget("tracker")}
-                >
-                  <Activity className="mr-2" size={16} />
-                  Activity Tracker
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="justify-start"
-                  onClick={() => addWidget("analytics")}
-                >
-                  <BarChart3 className="mr-2" size={16} />
-                  Analytics
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="justify-start"
-                  onClick={() => addWidget("notes")}
-                >
-                  <FileText className="mr-2" size={16} />
-                  Notes
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="justify-start"
-                  onClick={() => addWidget("goals")}
-                >
-                  <Calendar className="mr-2" size={16} />
-                  Goals
-                </Button>
-              </div>
-            </div>
-          </PopoverContent>
-        </Popover>
+        <div className="space-x-2">
+          <Button variant="outline" onClick={() => addWidget("tracker")}>
+            <Activity className="mr-2" size={16} />
+            Add Activity Widget
+          </Button>
+          
+          <Button variant="outline" onClick={() => addWidget("notes")}>
+            <FileText className="mr-2" size={16} />
+            Add Notes Widget
+          </Button>
+          
+          <Button variant="outline" onClick={() => addWidget("goals")}>
+            <Calendar className="mr-2" size={16} />
+            Add Goals Widget
+          </Button>
+        </div>
         
         <Button onClick={() => navigate("/discover")}>
           View AI Plans
