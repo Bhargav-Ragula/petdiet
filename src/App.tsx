@@ -12,6 +12,9 @@ import ProfilePage from "./pages/ProfilePage";
 import QuizPage from "./pages/QuizPage";
 import DietPlanPage from "./pages/DietPlanPage";
 import PetCarePlanPage from "./pages/PetCarePlanPage";
+import TrainingPlanPage from "./pages/TrainingPlanPage";
+import ActivitiesPlanPage from "./pages/ActivitiesPlanPage";
+import GroomingPlanPage from "./pages/GroomingPlanPage";
 import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
 
@@ -32,6 +35,9 @@ const App = () => (
           <Route path="/quiz" element={<QuizPage />} />
           <Route path="/diet-plan" element={<MainLayout><DietPlanPage /></MainLayout>} />
           <Route path="/pet-care-plan" element={<MainLayout><PetCarePlanPage /></MainLayout>} />
+          <Route path="/training-plan" element={<MainLayout><TrainingPlanPage /></MainLayout>} />
+          <Route path="/activities-plan" element={<MainLayout><ActivitiesPlanPage /></MainLayout>} />
+          <Route path="/grooming-plan" element={<MainLayout><GroomingPlanPage /></MainLayout>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

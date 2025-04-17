@@ -175,8 +175,23 @@ const DiscoverPage = () => {
     }
   ]);
   
-  const handleCreateAiPlan = () => {
-    navigate("/diet-plan");
+  const handleCreatePlan = (planType: string) => {
+    switch(planType) {
+      case "diet":
+        navigate("/diet-plan");
+        break;
+      case "training":
+        navigate("/training-plan");
+        break;
+      case "activities":
+        navigate("/activities-plan");
+        break;
+      case "grooming":
+        navigate("/grooming-plan");
+        break;
+      default:
+        navigate(`/pet-care-plan?type=${planType}`);
+    }
   };
 
   const handlePlanTypeClick = (planType: string) => {
@@ -291,15 +306,50 @@ const DiscoverPage = () => {
         {widgets.map(renderWidget)}
       </div>
 
-      <div className="bg-gradient-to-r from-primary/30 to-secondary/30 rounded-2xl p-5 shadow-sm">
-        <h2 className="font-semibold text-lg mb-2">Generate an AI Pet Diet Plan</h2>
-        <p className="text-sm mb-3">Enter your pet's details and get a personalized diet plan tailored to their needs.</p>
-        <Button 
-          className="bg-primary hover:bg-primary/90 text-primary-foreground flex items-center"
-          onClick={handleCreateAiPlan}
-        >
-          <Utensils size={16} className="mr-2" /> Create Pet Diet Plan
-        </Button>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-gradient-to-r from-primary/30 to-secondary/30 rounded-2xl p-5 shadow-sm">
+          <h2 className="font-semibold text-lg mb-2">Generate an AI Pet Diet Plan</h2>
+          <p className="text-sm mb-3">Get a personalized diet plan tailored to your pet's needs.</p>
+          <Button 
+            className="bg-primary hover:bg-primary/90 text-primary-foreground flex items-center"
+            onClick={() => handleCreatePlan("diet")}
+          >
+            <Utensils size={16} className="mr-2" /> Create Pet Diet Plan
+          </Button>
+        </div>
+
+        <div className="bg-gradient-to-r from-primary/30 to-secondary/30 rounded-2xl p-5 shadow-sm">
+          <h2 className="font-semibold text-lg mb-2">Generate an AI Training Plan</h2>
+          <p className="text-sm mb-3">Personalized training routines and behavioral tips.</p>
+          <Button 
+            className="bg-primary hover:bg-primary/90 text-primary-foreground flex items-center"
+            onClick={() => handleCreatePlan("training")}
+          >
+            <Activity size={16} className="mr-2" /> Create Training Plan
+          </Button>
+        </div>
+
+        <div className="bg-gradient-to-r from-primary/30 to-secondary/30 rounded-2xl p-5 shadow-sm">
+          <h2 className="font-semibold text-lg mb-2">Generate an AI Activities Plan</h2>
+          <p className="text-sm mb-3">Fun and engaging activities customized for your pet.</p>
+          <Button 
+            className="bg-primary hover:bg-primary/90 text-primary-foreground flex items-center"
+            onClick={() => handleCreatePlan("activities")}
+          >
+            <Calendar size={16} className="mr-2" /> Create Activities Plan
+          </Button>
+        </div>
+
+        <div className="bg-gradient-to-r from-primary/30 to-secondary/30 rounded-2xl p-5 shadow-sm">
+          <h2 className="font-semibold text-lg mb-2">Generate an AI Grooming Plan</h2>
+          <p className="text-sm mb-3">Tailored grooming routines for your pet's coat and needs.</p>
+          <Button 
+            className="bg-primary hover:bg-primary/90 text-primary-foreground flex items-center"
+            onClick={() => handleCreatePlan("grooming")}
+          >
+            <FileText size={16} className="mr-2" /> Create Grooming Plan
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-3">
