@@ -2,6 +2,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart3, Calendar, Activity, TrendingUp, Award } from "lucide-react";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 
 // Import recharts components for data visualization
 import { 
@@ -72,6 +73,58 @@ const achievements = [
 ];
 
 const InsightsPage = () => {
+  // Chart configurations
+  const activityChartConfig = {
+    walk: {
+      label: "Walking",
+      theme: {
+        light: "#9b87f5",
+        dark: "#9b87f5",
+      },
+    },
+    play: {
+      label: "Playing",
+      theme: {
+        light: "#7dd3fc",
+        dark: "#7dd3fc",
+      },
+    },
+  };
+
+  const weightChartConfig = {
+    weight: {
+      label: "Weight (kg)",
+      theme: {
+        light: "#9b87f5",
+        dark: "#9b87f5",
+      },
+    },
+  };
+
+  const nutritionChartConfig = {
+    protein: {
+      label: "Protein",
+      theme: {
+        light: "#9b87f5",
+        dark: "#9b87f5",
+      },
+    },
+    carbs: {
+      label: "Carbs",
+      theme: {
+        light: "#7dd3fc",
+        dark: "#7dd3fc",
+      },
+    },
+    fats: {
+      label: "Fats",
+      theme: {
+        light: "#86efac",
+        dark: "#86efac",
+      },
+    },
+  };
+
   return (
     <div className="py-6 space-y-6">
       <div>
@@ -97,16 +150,18 @@ const InsightsPage = () => {
             </CardHeader>
             <CardContent>
               <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={activityData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="name" fontSize={12} />
-                    <YAxis fontSize={12} />
-                    <Tooltip />
-                    <Bar dataKey="walk" name="Walking" fill="#9b87f5" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="play" name="Playing" fill="#7dd3fc" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+                <ChartContainer config={activityChartConfig}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={activityData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                      <XAxis dataKey="name" fontSize={12} />
+                      <YAxis fontSize={12} />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Bar dataKey="walk" name="walk" fill="var(--color-walk)" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="play" name="play" fill="var(--color-play)" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
               </div>
             </CardContent>
           </Card>
@@ -134,22 +189,25 @@ const InsightsPage = () => {
             </CardHeader>
             <CardContent>
               <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={healthData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="name" fontSize={12} />
-                    <YAxis domain={['dataMin - 0.5', 'dataMax + 0.5']} fontSize={12} />
-                    <Tooltip />
-                    <Line 
-                      type="monotone" 
-                      dataKey="weight" 
-                      stroke="#9b87f5" 
-                      strokeWidth={2}
-                      dot={{ r: 4 }}
-                      activeDot={{ r: 6 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+                <ChartContainer config={weightChartConfig}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={healthData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                      <XAxis dataKey="name" fontSize={12} />
+                      <YAxis domain={['dataMin - 0.5', 'dataMax + 0.5']} fontSize={12} />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Line 
+                        type="monotone" 
+                        dataKey="weight"
+                        name="weight" 
+                        stroke="var(--color-weight)" 
+                        strokeWidth={2}
+                        dot={{ r: 4 }}
+                        activeDot={{ r: 6 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
               </div>
             </CardContent>
           </Card>

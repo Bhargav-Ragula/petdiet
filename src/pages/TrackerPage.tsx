@@ -11,6 +11,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import AnalyticsWidget from "@/components/widgets/AnalyticsWidget";
 
 // Mock data for recent activities
 const recentActivities = [
@@ -163,40 +164,6 @@ const GoalCard = ({ goal }: { goal: typeof goals[0] }) => (
   </div>
 );
 
-const AnalyticsWidget = () => (
-  <Card>
-    <CardHeader>
-      <CardTitle className="text-lg flex items-center">
-        <BarChart3 className="mr-2" size={18} />
-        Activity Analytics
-      </CardTitle>
-      <CardDescription>Daily activity minutes</CardDescription>
-    </CardHeader>
-    <CardContent>
-      <div className="h-48 relative">
-        <div className="flex justify-between h-full">
-          {analyticsData.map((data, i) => (
-            <div key={i} className="flex flex-col items-center justify-end h-full w-full">
-              <div 
-                className="w-6 bg-primary/80 rounded-t-sm" 
-                style={{ height: `${(data.minutes / 75) * 100}%` }}
-              />
-              <span className="text-xs mt-1">{data.day}</span>
-            </div>
-          ))}
-        </div>
-        <div className="absolute top-0 left-0 w-full h-full pointer-events-none grid grid-rows-4 gap-0">
-          {[75, 50, 25, 0].map((value, i) => (
-            <div key={i} className="border-t border-dashed border-muted flex items-start">
-              <span className="text-xs text-muted-foreground -mt-2">{value}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </CardContent>
-  </Card>
-);
-
 const NotesWidget = () => (
   <Card>
     <CardHeader>
@@ -300,7 +267,7 @@ const TrackerPage = () => {
                 <X size={16} />
               </Button>
             </div>
-            <AnalyticsWidget />
+            <AnalyticsWidget data={analyticsData} title="Activity Analytics" description="Daily activity minutes" />
           </div>
         );
       case "notes":

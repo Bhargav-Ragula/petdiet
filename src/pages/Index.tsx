@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +9,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useNavigate } from "react-router-dom";
+import AnalyticsWidget from "@/components/widgets/AnalyticsWidget";
 
 // Widget types
 type WidgetType = "tracker" | "analytics" | "notes" | "goals";
@@ -111,29 +111,6 @@ const ActivityWidget = () => (
     <CardFooter>
       <Button variant="outline" size="sm" className="w-full" onClick={() => window.location.href = "/tracker"}>
         View All
-      </Button>
-    </CardFooter>
-  </Card>
-);
-
-const AnalyticsWidget = () => (
-  <Card>
-    <CardHeader>
-      <CardTitle className="text-base">Weekly Activity</CardTitle>
-    </CardHeader>
-    <CardContent>
-      <div className="h-36 flex items-end space-x-2">
-        {analyticsData.map((data, i) => (
-          <div key={i} className="flex flex-col items-center flex-1">
-            <div className="w-full bg-primary/80 rounded-t-sm" style={{ height: `${(data.minutes / 75) * 100}%` }} />
-            <span className="text-xs mt-1">{data.day}</span>
-          </div>
-        ))}
-      </div>
-    </CardContent>
-    <CardFooter>
-      <Button variant="outline" size="sm" className="w-full" onClick={() => window.location.href = "/insights"}>
-        View Details
       </Button>
     </CardFooter>
   </Card>
@@ -260,7 +237,7 @@ const Index = () => {
                 <X size={16} />
               </Button>
             </div>
-            <AnalyticsWidget />
+            <AnalyticsWidget data={analyticsData} compact={true} />
           </div>
         );
       case "notes":
