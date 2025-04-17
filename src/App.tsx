@@ -13,6 +13,7 @@ import QuizPage from "./pages/QuizPage";
 import DietPlanPage from "./pages/DietPlanPage";
 import PetCarePlanPage from "./pages/PetCarePlanPage";
 import NotFound from "./pages/NotFound";
+import Index from "./pages/Index";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<MainLayout><DiscoverPage /></MainLayout>} />
+          <Route path="/home" element={<MainLayout><Index /></MainLayout>} />
           <Route path="/tracker" element={<MainLayout><TrackerPage /></MainLayout>} />
           <Route path="/insights" element={<MainLayout><InsightsPage /></MainLayout>} />
           <Route path="/profile" element={<MainLayout><ProfilePage /></MainLayout>} />
