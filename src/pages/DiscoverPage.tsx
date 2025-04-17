@@ -284,93 +284,196 @@ const DiscoverPage = () => {
         <p className="text-muted-foreground">Get AI-powered care plans for your pet</p>
       </div>
 
-      <div className="flex justify-between items-center">
-        <Button variant="outline" onClick={() => addWidget("tracker")}>
-          <Plus size={18} className="mr-1" /> Add Activity Widget
-        </Button>
-        
-        <Button variant="outline" onClick={() => addWidget("notes")}>
-          <FileText size={18} className="mr-1" /> Add Notes Widget
-        </Button>
-        
-        <Button variant="outline" onClick={() => addWidget("goals")}>
-          <Calendar size={18} className="mr-1" /> Add Goals Widget
-        </Button>
-        
-        <Button onClick={() => navigate("/tracker")}>
-          View All Trackers
-        </Button>
-      </div>
-
       <div className="space-y-8">
         {widgets.map(renderWidget)}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-gradient-to-r from-primary/30 to-secondary/30 rounded-2xl p-5 shadow-sm">
-          <h2 className="font-semibold text-lg mb-2">Generate an AI Pet Diet Plan</h2>
-          <p className="text-sm mb-3">Get a personalized diet plan tailored to your pet's needs.</p>
-          <Button 
-            className="bg-primary hover:bg-primary/90 text-primary-foreground flex items-center"
-            onClick={() => handleCreatePlan("diet")}
-          >
-            <Utensils size={16} className="mr-2" /> Create Pet Diet Plan
-          </Button>
-        </div>
-
-        <div className="bg-gradient-to-r from-primary/30 to-secondary/30 rounded-2xl p-5 shadow-sm">
-          <h2 className="font-semibold text-lg mb-2">Generate an AI Training Plan</h2>
-          <p className="text-sm mb-3">Personalized training routines and behavioral tips.</p>
-          <Button 
-            className="bg-primary hover:bg-primary/90 text-primary-foreground flex items-center"
-            onClick={() => handleCreatePlan("training")}
-          >
-            <Activity size={16} className="mr-2" /> Create Training Plan
-          </Button>
-        </div>
-
-        <div className="bg-gradient-to-r from-primary/30 to-secondary/30 rounded-2xl p-5 shadow-sm">
-          <h2 className="font-semibold text-lg mb-2">Generate an AI Activities Plan</h2>
-          <p className="text-sm mb-3">Fun and engaging activities customized for your pet.</p>
-          <Button 
-            className="bg-primary hover:bg-primary/90 text-primary-foreground flex items-center"
-            onClick={() => handleCreatePlan("activities")}
-          >
-            <Calendar size={16} className="mr-2" /> Create Activities Plan
-          </Button>
-        </div>
-
-        <div className="bg-gradient-to-r from-primary/30 to-secondary/30 rounded-2xl p-5 shadow-sm">
-          <h2 className="font-semibold text-lg mb-2">Generate an AI Grooming Plan</h2>
-          <p className="text-sm mb-3">Tailored grooming routines for your pet's coat and needs.</p>
-          <Button 
-            className="bg-primary hover:bg-primary/90 text-primary-foreground flex items-center"
-            onClick={() => handleCreatePlan("grooming")}
-          >
-            <FileText size={16} className="mr-2" /> Create Grooming Plan
-          </Button>
-        </div>
-      </div>
-
-      <div className="space-y-3">
+      <div className="space-y-5">
         <div className="flex items-center justify-between">
           <h2 className="font-semibold text-xl flex items-center">
             <Wand2 className="mr-2 text-primary" size={20} /> AI Pet Care Plans
           </h2>
         </div>
-        <p className="text-sm text-muted-foreground">Select a plan type to generate personalized care guidance for your pet</p>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-2">
-          {aiPlanTypes.map(type => (
-            <button
-              key={type.id}
-              onClick={() => handlePlanTypeClick(type.id)}
-              className="flex flex-col items-center p-4 rounded-xl border-2 border-muted hover:border-primary/50 hover:bg-primary/5 transition-all"
-            >
-              <span className="text-2xl mb-2">{type.icon}</span>
-              <span className="font-medium text-sm">{type.name}</span>
-              <span className="text-xs text-muted-foreground mt-1">{type.description}</span>
-            </button>
-          ))}
+        <p className="text-sm text-muted-foreground">Generate personalized care plans tailored to your pet's unique needs</p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card className="border-2 hover:border-primary/50 hover:shadow-md transition-all overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-primary/20 to-secondary/20 pb-8">
+              <CardTitle className="flex items-center">
+                <Utensils size={18} className="mr-2 text-primary" />
+                Pet Diet Plan
+              </CardTitle>
+              <CardDescription>Nutrition recommendations based on your pet's needs</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <ul className="space-y-2 mb-4 text-sm">
+                <li className="flex items-center">
+                  <span className="bg-primary/10 p-1 rounded-full mr-2">✓</span>
+                  Personalized meal portions
+                </li>
+                <li className="flex items-center">
+                  <span className="bg-primary/10 p-1 rounded-full mr-2">✓</span>
+                  Food recommendations
+                </li>
+                <li className="flex items-center">
+                  <span className="bg-primary/10 p-1 rounded-full mr-2">✓</span>
+                  Feeding schedule
+                </li>
+              </ul>
+              <Button 
+                className="w-full bg-primary hover:bg-primary/90"
+                onClick={() => handleCreatePlan("diet")}
+              >
+                Generate Diet Plan
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="border-2 hover:border-primary/50 hover:shadow-md transition-all overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-primary/20 to-secondary/20 pb-8">
+              <CardTitle className="flex items-center">
+                <Activity size={18} className="mr-2 text-primary" />
+                Pet Training Plan
+              </CardTitle>
+              <CardDescription>Behavior training customized to your pet</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <ul className="space-y-2 mb-4 text-sm">
+                <li className="flex items-center">
+                  <span className="bg-primary/10 p-1 rounded-full mr-2">✓</span>
+                  Custom commands training
+                </li>
+                <li className="flex items-center">
+                  <span className="bg-primary/10 p-1 rounded-full mr-2">✓</span>
+                  Behavior correction tips
+                </li>
+                <li className="flex items-center">
+                  <span className="bg-primary/10 p-1 rounded-full mr-2">✓</span>
+                  Weekly training routine
+                </li>
+              </ul>
+              <Button 
+                className="w-full bg-primary hover:bg-primary/90"
+                onClick={() => handleCreatePlan("training")}
+              >
+                Generate Training Plan
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="border-2 hover:border-primary/50 hover:shadow-md transition-all overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-primary/20 to-secondary/20 pb-8">
+              <CardTitle className="flex items-center">
+                <Calendar size={18} className="mr-2 text-primary" />
+                Pet Activities Plan
+              </CardTitle>
+              <CardDescription>Fun and engaging activities for your pet</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <ul className="space-y-2 mb-4 text-sm">
+                <li className="flex items-center">
+                  <span className="bg-primary/10 p-1 rounded-full mr-2">✓</span>
+                  Age-appropriate activities
+                </li>
+                <li className="flex items-center">
+                  <span className="bg-primary/10 p-1 rounded-full mr-2">✓</span>
+                  Indoor/outdoor games
+                </li>
+                <li className="flex items-center">
+                  <span className="bg-primary/10 p-1 rounded-full mr-2">✓</span>
+                  Mental stimulation ideas
+                </li>
+              </ul>
+              <Button 
+                className="w-full bg-primary hover:bg-primary/90"
+                onClick={() => handleCreatePlan("activities")}
+              >
+                Generate Activities Plan
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="border-2 hover:border-primary/50 hover:shadow-md transition-all overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-primary/20 to-secondary/20 pb-8">
+              <CardTitle className="flex items-center">
+                <FileText size={18} className="mr-2 text-primary" />
+                Pet Grooming Plan
+              </CardTitle>
+              <CardDescription>Grooming routines for your pet's coat and needs</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <ul className="space-y-2 mb-4 text-sm">
+                <li className="flex items-center">
+                  <span className="bg-primary/10 p-1 rounded-full mr-2">✓</span>
+                  Coat-specific grooming routine
+                </li>
+                <li className="flex items-center">
+                  <span className="bg-primary/10 p-1 rounded-full mr-2">✓</span>
+                  Product recommendations
+                </li>
+                <li className="flex items-center">
+                  <span className="bg-primary/10 p-1 rounded-full mr-2">✓</span>
+                  Seasonal grooming tips
+                </li>
+              </ul>
+              <Button 
+                className="w-full bg-primary hover:bg-primary/90"
+                onClick={() => handleCreatePlan("grooming")}
+              >
+                Generate Grooming Plan
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="pt-4 mt-8 border-t">
+          <h3 className="text-lg font-medium mb-4">More Specialized Plans</h3>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            {aiPlanTypes.map(type => (
+              <button
+                key={type.id}
+                onClick={() => handlePlanTypeClick(type.id)}
+                className="flex flex-col items-center p-4 rounded-xl border-2 border-muted hover:border-primary/50 hover:bg-primary/5 transition-all"
+              >
+                <span className="text-2xl mb-2">{type.icon}</span>
+                <span className="font-medium text-sm">{type.name}</span>
+                <span className="text-xs text-muted-foreground mt-1">{type.description}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Widget section moved below plans */}
+      <div className="pt-6 mt-8 border-t">
+        <h2 className="font-semibold text-xl flex items-center mb-4">
+          <Plus className="mr-2 text-primary" size={20} /> Add Widgets to Dashboard
+        </h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Button variant="outline" className="h-auto py-3 flex flex-col items-center" onClick={() => addWidget("tracker")}>
+            <Activity size={22} className="mb-2" />
+            <span className="font-medium">Activity Widget</span>
+            <span className="text-xs text-muted-foreground mt-1">Track recent pet activities</span>
+          </Button>
+          
+          <Button variant="outline" className="h-auto py-3 flex flex-col items-center" onClick={() => addWidget("notes")}>
+            <FileText size={22} className="mb-2" />
+            <span className="font-medium">Notes Widget</span>
+            <span className="text-xs text-muted-foreground mt-1">Keep important pet notes</span>
+          </Button>
+          
+          <Button variant="outline" className="h-auto py-3 flex flex-col items-center" onClick={() => addWidget("goals")}>
+            <Calendar size={22} className="mb-2" />
+            <span className="font-medium">Goals Widget</span>
+            <span className="text-xs text-muted-foreground mt-1">Track pet care goals</span>
+          </Button>
+        </div>
+        
+        <div className="mt-4 flex justify-end">
+          <Button onClick={() => navigate("/tracker")}>
+            View All Trackers
+          </Button>
         </div>
       </div>
     </div>
