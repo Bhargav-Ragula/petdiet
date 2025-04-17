@@ -20,29 +20,31 @@ import Index from "./pages/Index";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<MainLayout><DiscoverPage /></MainLayout>} />
-          <Route path="/home" element={<MainLayout><Index /></MainLayout>} />
-          <Route path="/tracker" element={<MainLayout><TrackerPage /></MainLayout>} />
-          <Route path="/insights" element={<MainLayout><InsightsPage /></MainLayout>} />
-          <Route path="/profile" element={<MainLayout><ProfilePage /></MainLayout>} />
-          <Route path="/quiz" element={<QuizPage />} />
-          <Route path="/diet-plan" element={<MainLayout><DietPlanPage /></MainLayout>} />
-          <Route path="/pet-care-plan" element={<MainLayout><PetCarePlanPage /></MainLayout>} />
-          <Route path="/training-plan" element={<MainLayout><TrainingPlanPage /></MainLayout>} />
-          <Route path="/activities-plan" element={<MainLayout><ActivitiesPlanPage /></MainLayout>} />
-          <Route path="/grooming-plan" element={<MainLayout><GroomingPlanPage /></MainLayout>} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<MainLayout><DiscoverPage /></MainLayout>} />
+            <Route path="/home" element={<MainLayout><Index /></MainLayout>} />
+            <Route path="/tracker" element={<MainLayout><TrackerPage /></MainLayout>} />
+            <Route path="/insights" element={<MainLayout><InsightsPage /></MainLayout>} />
+            <Route path="/profile" element={<MainLayout><ProfilePage /></MainLayout>} />
+            <Route path="/quiz" element={<QuizPage />} />
+            <Route path="/diet-plan" element={<MainLayout><DietPlanPage /></MainLayout>} />
+            <Route path="/pet-care-plan" element={<MainLayout><PetCarePlanPage /></MainLayout>} />
+            <Route path="/training-plan" element={<MainLayout><TrainingPlanPage /></MainLayout>} />
+            <Route path="/activities-plan" element={<MainLayout><ActivitiesPlanPage /></MainLayout>} />
+            <Route path="/grooming-plan" element={<MainLayout><GroomingPlanPage /></MainLayout>} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
