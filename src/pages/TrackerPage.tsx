@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Activity, Calendar, Plus, Clock, MapPin, FileText, ChevronLeft } from "lucide-react";
+import { Activity, Calendar, Plus, Clock, MapPin, FileText, ChevronLeft, InboxIcon } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { 
@@ -24,38 +24,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import AnalyticsWidget from "@/components/widgets/AnalyticsWidget";
-
-// Mock data for recent activities
-const recentActivities = [
-  {
-    id: 1,
-    type: "Walk",
-    petName: "Buddy",
-    duration: "30 min",
-    distance: "2.1 km",
-    date: "Today, 10:30 AM",
-    location: "Local Park",
-    icon: "🦮"
-  },
-  {
-    id: 2,
-    type: "Play",
-    petName: "Buddy",
-    duration: "15 min",
-    date: "Yesterday, 4:45 PM",
-    location: "Home",
-    icon: "🎾"
-  },
-  {
-    id: 3,
-    type: "Grooming",
-    petName: "Luna",
-    duration: "20 min",
-    date: "Yesterday, 6:30 PM",
-    location: "Home",
-    icon: "🧼"
-  }
-];
 
 // Mock data for goals
 const goals = [
@@ -82,17 +50,6 @@ const goals = [
   }
 ];
 
-// Mock data for analytics
-const analyticsData = [
-  { day: 'Mon', minutes: 35 },
-  { day: 'Tue', minutes: 20 },
-  { day: 'Wed', minutes: 45 },
-  { day: 'Thu', minutes: 30 },
-  { day: 'Fri', minutes: 60 },
-  { day: 'Sat', minutes: 75 },
-  { day: 'Sun', minutes: 45 },
-];
-
 // Mock data for notes
 const notesData = [
   {
@@ -111,7 +68,7 @@ const notesData = [
   }
 ];
 
-const ActivityCard = ({ activity }: { activity: typeof recentActivities[0] }) => (
+const ActivityCard = ({ activity }) => (
   <Card className="mb-3">
     <CardHeader className="pb-2">
       <div className="flex justify-between items-center">
@@ -150,7 +107,7 @@ const ActivityCard = ({ activity }: { activity: typeof recentActivities[0] }) =>
   </Card>
 );
 
-const GoalCard = ({ goal }: { goal: typeof goals[0] }) => (
+const GoalCard = ({ goal }) => (
   <div className="flex items-center space-x-3 p-3 rounded-lg border bg-card">
     <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-xl">
       {goal.icon}
@@ -200,6 +157,31 @@ const NotesWidget = () => (
   </Card>
 );
 
+const EmptyState = ({ title, description, icon, actionText, onAction }) => (
+  <div className="flex flex-col items-center justify-center p-8 text-center h-60">
+    <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-4">
+      {icon}
+    </div>
+    <h3 className="text-lg font-medium mb-2">{title}</h3>
+    <p className="text-muted-foreground mb-6 max-w-sm">{description}</p>
+    <Button onClick={onAction}>
+      <Plus size={16} className="mr-2" />
+      {actionText}
+    </Button>
+  </div>
+);
+
+// Mock data for analytics
+const analyticsData = [
+  { day: 'Mon', minutes: 35 },
+  { day: 'Tue', minutes: 20 },
+  { day: 'Wed', minutes: 45 },
+  { day: 'Thu', minutes: 30 },
+  { day: 'Fri', minutes: 60 },
+  { day: 'Sat', minutes: 75 },
+  { day: 'Sun', minutes: 45 },
+];
+
 const TrackerPage = () => {
   const [activeTab, setActiveTab] = useState("activities");
   const [isNewActivityDialogOpen, setIsNewActivityDialogOpen] = useState(false);
@@ -209,10 +191,35 @@ const TrackerPage = () => {
     duration: "30",
     location: "Local Park",
   });
+  const [activities, setActivities] = useState([]);
+  const [hasInsights, setHasInsights] = useState(false);
 
   const handleAddActivity = () => {
-    // In a real app, this would add the activity to a database
-    // For now, we'll just show a success message
+    // Create a new activity object
+    const activity = {
+      id: Date.now(),
+      type: newActivity.type,
+      petName: newActivity.petName,
+      duration: `${newActivity.duration} min`,
+      distance: newActivity.type === "Walk" ? "2.1 km" : undefined,
+      date: "Today, " + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      location: newActivity.location,
+      icon: newActivity.type === "Walk" ? "🦮" : 
+            newActivity.type === "Play" ? "🎾" : 
+            newActivity.type === "Training" ? "🏆" : 
+            newActivity.type === "Grooming" ? "🧼" : 
+            newActivity.type === "Vet Visit" ? "🩺" : "🐾"
+    };
+
+    // Update activities state
+    setActivities(prev => [activity, ...prev]);
+    
+    // Set insights flag to true once at least one activity is added
+    if (!hasInsights) {
+      setHasInsights(true);
+    }
+    
+    // Show success message
     toast.success(`New ${newActivity.type} activity added`);
     setIsNewActivityDialogOpen(false);
   };
@@ -232,27 +239,43 @@ const TrackerPage = () => {
 
       <Tabs defaultValue="activities" className="w-full">
         <TabsList className="grid grid-cols-3 mb-4">
-          <TabsTrigger value="activities">Activities</TabsTrigger>
-          <TabsTrigger value="goals">Goals</TabsTrigger>
-          <TabsTrigger value="notes">Notes</TabsTrigger>
+          <TabsTrigger value="activities" onClick={() => setActiveTab("activities")}>Activities</TabsTrigger>
+          <TabsTrigger value="goals" onClick={() => setActiveTab("goals")}>Goals</TabsTrigger>
+          <TabsTrigger value="notes" onClick={() => setActiveTab("notes")}>Notes</TabsTrigger>
         </TabsList>
         
         <TabsContent value="activities" className="space-y-4">
-          <div className="mb-4">
-            <AnalyticsWidget 
-              data={analyticsData} 
-              title="Activity Overview" 
-              description="Daily activity minutes"
-              showViewDetails={false}
-            />
-          </div>
-          
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium">Recent Activities</h3>
-            {recentActivities.map(activity => (
-              <ActivityCard key={activity.id} activity={activity} />
-            ))}
-          </div>
+          {activities.length === 0 ? (
+            <Card>
+              <CardContent className="p-0">
+                <EmptyState 
+                  title="No activities yet"
+                  description="Start tracking your pet's activities by adding your first activity."
+                  icon={<Activity size={24} />}
+                  actionText="Add First Activity"
+                  onAction={() => setIsNewActivityDialogOpen(true)}
+                />
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              <div className="mb-4">
+                <AnalyticsWidget 
+                  data={analyticsData} 
+                  title="Activity Overview" 
+                  description="Daily activity minutes"
+                  showViewDetails={false}
+                />
+              </div>
+              
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">Recent Activities</h3>
+                {activities.map(activity => (
+                  <ActivityCard key={activity.id} activity={activity} />
+                ))}
+              </div>
+            </>
+          )}
         </TabsContent>
         
         <TabsContent value="goals" className="space-y-4">
