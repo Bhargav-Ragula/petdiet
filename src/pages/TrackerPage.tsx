@@ -3,8 +3,14 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Activity, Calendar, Plus, Clock, MapPin } from "lucide-react";
+import { Activity, Calendar, Plus, Clock, MapPin, BarChart3, FileText, X } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { toast } from "sonner";
+import { 
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 // Mock data for recent activities
 const recentActivities = [
@@ -63,6 +69,46 @@ const goals = [
   }
 ];
 
+// Mock data for analytics
+const analyticsData = [
+  { day: 'Mon', minutes: 35 },
+  { day: 'Tue', minutes: 20 },
+  { day: 'Wed', minutes: 45 },
+  { day: 'Thu', minutes: 30 },
+  { day: 'Fri', minutes: 60 },
+  { day: 'Sat', minutes: 75 },
+  { day: 'Sun', minutes: 45 },
+];
+
+// Mock data for notes
+const notesData = [
+  {
+    id: 1,
+    title: "Vaccination Reminder",
+    content: "Buddy's annual vaccines are due next month. Call vet to schedule appointment.",
+    date: "2025-04-10",
+    tags: ["health", "reminder"]
+  },
+  {
+    id: 2,
+    title: "New Food Transition",
+    content: "Started transition to grain-free kibble. Monitor for any digestive issues or allergies.",
+    date: "2025-04-15",
+    tags: ["nutrition", "health"]
+  }
+];
+
+// Widget types
+type WidgetType = "tracker" | "analytics" | "notes" | "goals";
+
+// Widget definition
+interface Widget {
+  id: string;
+  type: WidgetType;
+  title: string;
+  icon: JSX.Element;
+}
+
 const ActivityCard = ({ activity }: { activity: typeof recentActivities[0] }) => (
   <Card className="mb-3">
     <CardHeader className="pb-2">
@@ -117,8 +163,178 @@ const GoalCard = ({ goal }: { goal: typeof goals[0] }) => (
   </div>
 );
 
+const AnalyticsWidget = () => (
+  <Card>
+    <CardHeader>
+      <CardTitle className="text-lg flex items-center">
+        <BarChart3 className="mr-2" size={18} />
+        Activity Analytics
+      </CardTitle>
+      <CardDescription>Daily activity minutes</CardDescription>
+    </CardHeader>
+    <CardContent>
+      <div className="h-48 relative">
+        <div className="flex justify-between h-full">
+          {analyticsData.map((data, i) => (
+            <div key={i} className="flex flex-col items-center justify-end h-full w-full">
+              <div 
+                className="w-6 bg-primary/80 rounded-t-sm" 
+                style={{ height: `${(data.minutes / 75) * 100}%` }}
+              />
+              <span className="text-xs mt-1">{data.day}</span>
+            </div>
+          ))}
+        </div>
+        <div className="absolute top-0 left-0 w-full h-full pointer-events-none grid grid-rows-4 gap-0">
+          {[75, 50, 25, 0].map((value, i) => (
+            <div key={i} className="border-t border-dashed border-muted flex items-start">
+              <span className="text-xs text-muted-foreground -mt-2">{value}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+);
+
+const NotesWidget = () => (
+  <Card>
+    <CardHeader>
+      <CardTitle className="text-lg flex items-center">
+        <FileText className="mr-2" size={18} />
+        Pet Notes
+      </CardTitle>
+      <CardDescription>Important reminders</CardDescription>
+    </CardHeader>
+    <CardContent className="space-y-3">
+      {notesData.map(note => (
+        <div key={note.id} className="p-3 border rounded-md bg-card/50">
+          <div className="flex justify-between">
+            <h3 className="text-sm font-medium">{note.title}</h3>
+            <span className="text-xs text-muted-foreground">{note.date}</span>
+          </div>
+          <p className="text-xs mt-1 text-muted-foreground">{note.content}</p>
+          <div className="flex gap-1 mt-2">
+            {note.tags.map(tag => (
+              <span key={tag} className="text-xs bg-muted px-2 py-0.5 rounded-full">
+                {tag}
+              </span>
+            ))}
+          </div>
+        </div>
+      ))}
+    </CardContent>
+    <CardFooter>
+      <Button variant="outline" size="sm" className="w-full">
+        <Plus size={14} className="mr-1" /> Add Note
+      </Button>
+    </CardFooter>
+  </Card>
+);
+
 const TrackerPage = () => {
-  const [activeTab, setActiveTab] = useState("activities");
+  const [widgets, setWidgets] = useState<Widget[]>([
+    { 
+      id: "tracker-1", 
+      type: "tracker", 
+      title: "Recent Activities", 
+      icon: <Activity size={16} />
+    }
+  ]);
+
+  const addWidget = (type: WidgetType) => {
+    const newWidget: Widget = {
+      id: `${type}-${Date.now()}`,
+      type,
+      title: type === "tracker" 
+        ? "Recent Activities" 
+        : type === "analytics" 
+          ? "Activity Analytics" 
+          : type === "notes" 
+            ? "Pet Notes" 
+            : "Pet Goals",
+      icon: type === "tracker" 
+        ? <Activity size={16} />
+        : type === "analytics" 
+          ? <BarChart3 size={16} />
+          : type === "notes" 
+            ? <FileText size={16} />
+            : <Calendar size={16} />
+    };
+    setWidgets([...widgets, newWidget]);
+    toast.success(`Added ${newWidget.title} widget`);
+  };
+
+  const removeWidget = (id: string) => {
+    setWidgets(widgets.filter(widget => widget.id !== id));
+    toast.info("Widget removed");
+  };
+
+  const renderWidget = (widget: Widget) => {
+    switch(widget.type) {
+      case "tracker":
+        return (
+          <div className="space-y-4" key={widget.id}>
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-medium">{widget.title}</h3>
+              <Button variant="ghost" size="icon" onClick={() => removeWidget(widget.id)}>
+                <X size={16} />
+              </Button>
+            </div>
+            {recentActivities.map(activity => (
+              <ActivityCard key={activity.id} activity={activity} />
+            ))}
+            <div className="text-center py-3">
+              <Button variant="outline" className="w-full" size="sm">
+                View All Activities
+              </Button>
+            </div>
+          </div>
+        );
+      case "analytics":
+        return (
+          <div className="space-y-4" key={widget.id}>
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-medium">{widget.title}</h3>
+              <Button variant="ghost" size="icon" onClick={() => removeWidget(widget.id)}>
+                <X size={16} />
+              </Button>
+            </div>
+            <AnalyticsWidget />
+          </div>
+        );
+      case "notes":
+        return (
+          <div className="space-y-4" key={widget.id}>
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-medium">{widget.title}</h3>
+              <Button variant="ghost" size="icon" onClick={() => removeWidget(widget.id)}>
+                <X size={16} />
+              </Button>
+            </div>
+            <NotesWidget />
+          </div>
+        );
+      case "goals":
+        return (
+          <div className="space-y-4" key={widget.id}>
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-medium">{widget.title}</h3>
+              <Button variant="ghost" size="icon" onClick={() => removeWidget(widget.id)}>
+                <X size={16} />
+              </Button>
+            </div>
+            <div className="space-y-3">
+              {goals.map(goal => (
+                <GoalCard key={goal.id} goal={goal} />
+              ))}
+            </div>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className="py-6 space-y-6">
@@ -127,55 +343,63 @@ const TrackerPage = () => {
         <p className="text-muted-foreground">Track your pet's activities & goals</p>
       </div>
       
-      <div className="flex justify-end">
+      <div className="flex justify-between items-center">
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button>
+              <Plus size={18} className="mr-1" /> Add Widget
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-56">
+            <div className="space-y-2">
+              <h3 className="font-medium">Add Widget</h3>
+              <p className="text-sm text-muted-foreground">Choose a widget type to add to your dashboard</p>
+              <div className="grid grid-cols-1 gap-2 pt-2">
+                <Button 
+                  variant="outline" 
+                  className="justify-start"
+                  onClick={() => addWidget("tracker")}
+                >
+                  <Activity className="mr-2" size={16} />
+                  Activity Tracker
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="justify-start"
+                  onClick={() => addWidget("analytics")}
+                >
+                  <BarChart3 className="mr-2" size={16} />
+                  Analytics
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="justify-start"
+                  onClick={() => addWidget("notes")}
+                >
+                  <FileText className="mr-2" size={16} />
+                  Notes
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="justify-start"
+                  onClick={() => addWidget("goals")}
+                >
+                  <Calendar className="mr-2" size={16} />
+                  Goals
+                </Button>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
+        
         <Button className="bg-primary hover:bg-primary/90">
           <Plus size={18} className="mr-1" /> New Activity
         </Button>
       </div>
 
-      <Tabs defaultValue="activities" className="w-full">
-        <TabsList className="grid grid-cols-2 mb-4">
-          <TabsTrigger value="activities">Activities</TabsTrigger>
-          <TabsTrigger value="goals">Goals</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="activities" className="space-y-4">
-          <div className="space-y-1">
-            <h3 className="text-lg font-medium">Recent Activities</h3>
-            <p className="text-sm text-muted-foreground">Your latest pet activities</p>
-          </div>
-          
-          {recentActivities.map(activity => (
-            <ActivityCard key={activity.id} activity={activity} />
-          ))}
-          
-          <div className="text-center py-3">
-            <Button variant="outline" className="w-full" size="sm">
-              View All Activities
-            </Button>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="goals" className="space-y-4">
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-medium">Pet Care Goals</h3>
-                <p className="text-sm text-muted-foreground">Track your pet care routines</p>
-              </div>
-              <Button variant="outline" size="sm">
-                <Plus size={14} className="mr-1" /> Goal
-              </Button>
-            </div>
-          </div>
-          
-          <div className="space-y-3">
-            {goals.map(goal => (
-              <GoalCard key={goal.id} goal={goal} />
-            ))}
-          </div>
-        </TabsContent>
-      </Tabs>
+      <div className="space-y-8">
+        {widgets.map(renderWidget)}
+      </div>
     </div>
   );
 };

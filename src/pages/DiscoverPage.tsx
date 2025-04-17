@@ -17,70 +17,10 @@ const aiPlanTypes = [
   { id: "social", name: "Socialization", icon: "🐩", description: "Interaction with other pets" },
 ];
 
-const PetCard = ({ name, type, match, image, tags }: { 
-  name: string; 
-  type: string; 
-  match: number;
-  image: string;
-  tags: string[];
-}) => (
-  <Card className="overflow-hidden transition-all hover:shadow-md">
-    <div className="relative h-48 overflow-hidden bg-muted">
-      <img src={image} alt={name} className="w-full h-full object-cover" />
-      <div className="absolute top-2 right-2 bg-primary/90 text-primary-foreground py-1 px-3 rounded-full text-xs font-semibold flex items-center">
-        <Sparkles size={14} className="mr-1" /> {match}% Match
-      </div>
-    </div>
-    <CardHeader className="pb-2">
-      <div className="flex justify-between items-center">
-        <CardTitle className="text-lg">{name}</CardTitle>
-        <Button variant="ghost" size="icon" className="text-primary hover:text-primary">
-          <Heart size={20} />
-        </Button>
-      </div>
-      <CardDescription>{type}</CardDescription>
-    </CardHeader>
-    <CardContent className="pb-4">
-      <div className="flex flex-wrap gap-1">
-        {tags.map((tag, index) => (
-          <span key={index} className="text-xs bg-muted px-2 py-1 rounded-full">
-            {tag}
-          </span>
-        ))}
-      </div>
-    </CardContent>
-  </Card>
-);
-
 const DiscoverPage = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("recommended");
   const [isGenerating, setIsGenerating] = useState(false);
   
-  const recommendedPets = [
-    { 
-      name: "Buddy", 
-      type: "Golden Retriever", 
-      match: 98, 
-      image: "https://images.unsplash.com/photo-1552053831-71594a27632d?q=80&w=612",
-      tags: ["Friendly", "Active", "Family pet"]
-    },
-    { 
-      name: "Luna", 
-      type: "Siamese Cat", 
-      match: 92, 
-      image: "https://images.unsplash.com/photo-1513360371669-4adf3dd7dff8?q=80&w=1470",
-      tags: ["Independent", "Quiet", "Low maintenance"]
-    },
-    { 
-      name: "Charlie", 
-      type: "Cockatiel", 
-      match: 87, 
-      image: "https://images.unsplash.com/photo-1591198936750-16d8e15edb9e?q=80&w=1470",
-      tags: ["Social", "Vocal", "Intelligent"]
-    },
-  ];
-
   const handleCreateAiPlan = () => {
     navigate("/diet-plan");
   };
@@ -96,7 +36,7 @@ const DiscoverPage = () => {
         <h1 className="text-2xl font-bold text-foreground flex items-center">
           <span className="text-primary mr-2">🐾</span> PetPals AI Hub
         </h1>
-        <p className="text-muted-foreground">Find your perfect pet companion</p>
+        <p className="text-muted-foreground">Get AI-powered care plans for your pet</p>
       </div>
 
       <div className="bg-gradient-to-r from-primary/30 to-secondary/30 rounded-2xl p-5 shadow-sm">
@@ -132,23 +72,34 @@ const DiscoverPage = () => {
         </div>
       </div>
 
-      <div>
-        <Tabs defaultValue="recommended" className="w-full">
-          <TabsList className="grid grid-cols-2 w-full">
-            <TabsTrigger value="recommended">Recommended</TabsTrigger>
-            <TabsTrigger value="trending">Trending</TabsTrigger>
-          </TabsList>
-          <TabsContent value="recommended" className="mt-4 space-y-4">
-            {recommendedPets.map((pet, index) => (
-              <PetCard key={index} {...pet} />
-            ))}
-          </TabsContent>
-          <TabsContent value="trending" className="mt-4">
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">Complete your profile to see trending pets in your area.</p>
+      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-5 shadow-sm">
+        <div className="flex items-start space-x-3">
+          <div className="bg-primary/20 p-2 rounded-full">
+            <Lightbulb className="text-primary" size={24} />
+          </div>
+          <div>
+            <h2 className="font-semibold text-lg mb-1">Discover More Pet Care Resources</h2>
+            <p className="text-sm text-muted-foreground mb-3">
+              Track activities, set care goals, analyze patterns, and manage your pet's health all in one place.
+            </p>
+            <div className="flex space-x-2">
+              <Button 
+                variant="outline" 
+                className="flex items-center" 
+                onClick={() => navigate('/tracker')}
+              >
+                Activity Tracker <ArrowRight size={14} className="ml-1" />
+              </Button>
+              <Button 
+                variant="outline" 
+                className="flex items-center"
+                onClick={() => navigate('/insights')} 
+              >
+                Pet Insights <ArrowRight size={14} className="ml-1" />
+              </Button>
             </div>
-          </TabsContent>
-        </Tabs>
+          </div>
+        </div>
       </div>
     </div>
   );
