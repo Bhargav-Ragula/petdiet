@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,7 +14,6 @@ const aiPlanTypes = [
   { id: "social", name: "Socialization", icon: "🐩", description: "Find nearby pet events" },
 ];
 
-// Mock activity data
 const recentActivities = [
   {
     id: 1,
@@ -35,10 +33,8 @@ const recentActivities = [
   }
 ];
 
-// Widget types
 type WidgetType = "tracker" | "notes" | "goals";
 
-// Widget definition
 interface Widget {
   id: string;
   type: WidgetType;
@@ -75,7 +71,6 @@ const ActivityWidget = () => (
   </Card>
 );
 
-// Mock notes
 const notesData = [
   {
     id: 1,
@@ -113,7 +108,6 @@ const NotesWidget = () => (
   </Card>
 );
 
-// Mock goals
 const goals = [
   {
     id: 1,
@@ -426,54 +420,36 @@ const DiscoverPage = () => {
           </Card>
         </div>
 
-        <div className="pt-4 mt-8 border-t">
-          <h3 className="text-lg font-medium mb-4">More Specialized Plans</h3>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            {aiPlanTypes.map(type => (
-              <button
-                key={type.id}
-                onClick={() => handlePlanTypeClick(type.id)}
-                className="flex flex-col items-center p-4 rounded-xl border-2 border-muted hover:border-primary/50 hover:bg-primary/5 transition-all"
-              >
-                <span className="text-2xl mb-2">{type.icon}</span>
-                <span className="font-medium text-sm">{type.name}</span>
-                <span className="text-xs text-muted-foreground mt-1">{type.description}</span>
-              </button>
-            ))}
+        <div className="pt-6 mt-8 border-t">
+          <h2 className="font-semibold text-xl flex items-center mb-4">
+            <Plus className="mr-2 text-primary" size={20} /> Add Widgets to Dashboard
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Button variant="outline" className="h-auto py-3 flex flex-col items-center" onClick={() => addWidget("tracker")}>
+              <Activity size={22} className="mb-2" />
+              <span className="font-medium">Activity Widget</span>
+              <span className="text-xs text-muted-foreground mt-1">Track recent pet activities</span>
+            </Button>
+            
+            <Button variant="outline" className="h-auto py-3 flex flex-col items-center" onClick={() => addWidget("notes")}>
+              <FileText size={22} className="mb-2" />
+              <span className="font-medium">Notes Widget</span>
+              <span className="text-xs text-muted-foreground mt-1">Keep important pet notes</span>
+            </Button>
+            
+            <Button variant="outline" className="h-auto py-3 flex flex-col items-center" onClick={() => addWidget("goals")}>
+              <Calendar size={22} className="mb-2" />
+              <span className="font-medium">Goals Widget</span>
+              <span className="text-xs text-muted-foreground mt-1">Track pet care goals</span>
+            </Button>
           </div>
-        </div>
-      </div>
-
-      {/* Widget section moved below plans */}
-      <div className="pt-6 mt-8 border-t">
-        <h2 className="font-semibold text-xl flex items-center mb-4">
-          <Plus className="mr-2 text-primary" size={20} /> Add Widgets to Dashboard
-        </h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Button variant="outline" className="h-auto py-3 flex flex-col items-center" onClick={() => addWidget("tracker")}>
-            <Activity size={22} className="mb-2" />
-            <span className="font-medium">Activity Widget</span>
-            <span className="text-xs text-muted-foreground mt-1">Track recent pet activities</span>
-          </Button>
           
-          <Button variant="outline" className="h-auto py-3 flex flex-col items-center" onClick={() => addWidget("notes")}>
-            <FileText size={22} className="mb-2" />
-            <span className="font-medium">Notes Widget</span>
-            <span className="text-xs text-muted-foreground mt-1">Keep important pet notes</span>
-          </Button>
-          
-          <Button variant="outline" className="h-auto py-3 flex flex-col items-center" onClick={() => addWidget("goals")}>
-            <Calendar size={22} className="mb-2" />
-            <span className="font-medium">Goals Widget</span>
-            <span className="text-xs text-muted-foreground mt-1">Track pet care goals</span>
-          </Button>
-        </div>
-        
-        <div className="mt-4 flex justify-end">
-          <Button onClick={() => navigate("/tracker")}>
-            View All Trackers
-          </Button>
+          <div className="mt-4 flex justify-end">
+            <Button onClick={() => navigate("/tracker")}>
+              View All Trackers
+            </Button>
+          </div>
         </div>
       </div>
     </div>
