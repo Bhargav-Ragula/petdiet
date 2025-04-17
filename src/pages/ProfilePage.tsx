@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Bell, Settings, ChevronRight, User, Heart, Dog, Cat, Shield, LogOut, X, Check, Pencil } from "lucide-react";
+import { Bell, Settings, User, Heart, Dog, Shield, LogOut, X, Check, Pencil, Plus, Image as ImageIcon } from "lucide-react";
 import { 
   Dialog,
   DialogContent,
@@ -16,32 +16,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 // Mock user data
 const userData = {
   name: "Alex Johnson",
   email: "alex@example.com",
-  avatarUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1374",
   joinedDate: "January 2023"
 };
-
-// Mock pet data
-const petProfiles = [
-  {
-    id: 1,
-    name: "Buddy",
-    type: "Golden Retriever",
-    age: "3 years",
-    image: "https://images.unsplash.com/photo-1552053831-71594a27632d?q=80&w=612"
-  },
-  {
-    id: 2,
-    name: "Luna",
-    type: "Siamese Cat",
-    age: "2 years",
-    image: "https://images.unsplash.com/photo-1513360371669-4adf3dd7dff8?q=80&w=1470"
-  }
-];
 
 // Mock preferences
 const preferences = [
@@ -52,15 +34,46 @@ const preferences = [
 ];
 
 const ProfilePage = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("pets");
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isAddPetDialogOpen, setIsAddPetDialogOpen] = useState(false);
   const [editedUserData, setEditedUserData] = useState({ ...userData });
+  const [petProfiles, setPetProfiles] = useState([]);
+  const [newPet, setNewPet] = useState({
+    name: "",
+    type: "",
+    age: "",
+  });
 
   const handleSaveProfile = () => {
     // In a real app, this would send the data to an API
     // For now, we'll just show a success message
     toast.success("Profile updated successfully!");
     setIsEditDialogOpen(false);
+  };
+
+  const handleAddPet = () => {
+    const pet = {
+      id: Date.now(),
+      name: newPet.name,
+      type: newPet.type,
+      age: newPet.age,
+    };
+
+    setPetProfiles([...petProfiles, pet]);
+    setIsAddPetDialogOpen(false);
+    setNewPet({
+      name: "",
+      type: "",
+      age: "",
+    });
+    toast.success("Pet added successfully!");
+  };
+
+  const handleDeletePet = (id) => {
+    setPetProfiles(petProfiles.filter(pet => pet.id !== id));
+    toast.info("Pet removed");
   };
 
   return (
@@ -72,7 +85,6 @@ const ProfilePage = () => {
 
       <div className="flex items-center space-x-4">
         <Avatar className="h-16 w-16 border-2 border-primary">
-          <AvatarImage src={userData.avatarUrl} alt={userData.name} />
           <AvatarFallback>{userData.name.charAt(0)}</AvatarFallback>
         </Avatar>
         <div>
@@ -94,33 +106,50 @@ const ProfilePage = () => {
         <TabsContent value="pets" className="space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-medium">Pet Profiles</h3>
-            <Button variant="outline" size="sm">Add Pet</Button>
+            <Button variant="outline" size="sm" onClick={() => setIsAddPetDialogOpen(true)}>
+              <Plus size={14} className="mr-1" />
+              Add Pet
+            </Button>
           </div>
           
-          {petProfiles.map(pet => (
-            <Card key={pet.id} className="overflow-hidden">
-              <div className="flex">
-                <div className="w-24 h-24">
-                  <img 
-                    src={pet.image} 
-                    alt={pet.name} 
-                    className="w-full h-full object-cover"
-                  />
+          {petProfiles.length === 0 ? (
+            <Card className="bg-muted/30 border-dashed">
+              <CardContent className="p-6 flex flex-col items-center justify-center text-center">
+                <div className="rounded-full bg-muted p-3 mb-3">
+                  <Dog size={24} className="text-primary" />
                 </div>
-                <CardContent className="flex-1 py-4">
+                <h4 className="font-medium mb-1">No Pets Added Yet</h4>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Add your pets to keep track of their activities and care needs.
+                </p>
+                <Button onClick={() => setIsAddPetDialogOpen(true)}>
+                  <Plus size={14} className="mr-2" />
+                  Add First Pet
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            petProfiles.map(pet => (
+              <Card key={pet.id} className="overflow-hidden">
+                <CardContent className="p-4">
                   <div className="flex justify-between items-start">
-                    <div>
-                      <h4 className="font-medium">{pet.name}</h4>
-                      <p className="text-sm text-muted-foreground">{pet.type}, {pet.age}</p>
+                    <div className="flex items-center">
+                      <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-xl mr-3">
+                        {pet.type.includes("Cat") ? "🐱" : "🐶"}
+                      </div>
+                      <div>
+                        <h4 className="font-medium">{pet.name}</h4>
+                        <p className="text-sm text-muted-foreground">{pet.type}, {pet.age}</p>
+                      </div>
                     </div>
-                    <Button variant="ghost" size="icon">
-                      <ChevronRight size={18} />
+                    <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleDeletePet(pet.id)}>
+                      <X size={14} />
                     </Button>
                   </div>
                 </CardContent>
-              </div>
-            </Card>
-          ))}
+              </Card>
+            ))
+          )}
           
           <Card className="bg-muted/30 border-dashed">
             <CardContent className="p-6 flex flex-col items-center justify-center text-center">
@@ -131,7 +160,7 @@ const ProfilePage = () => {
               <p className="text-sm text-muted-foreground mb-3">
                 Take our pet matching quiz to find the perfect pet for your lifestyle.
               </p>
-              <Button variant="outline" size="sm">Start Quiz</Button>
+              <Button variant="outline" size="sm" onClick={() => navigate("/quiz")}>Start Quiz</Button>
             </CardContent>
           </Card>
         </TabsContent>
@@ -147,7 +176,7 @@ const ProfilePage = () => {
               {preferences.map((pref, index) => (
                 <div key={index} className="flex items-center justify-between py-2 border-b last:border-0">
                   <span>{pref.name}</span>
-                  <div className={`w-9 h-5 rounded-full relative ${pref.enabled ? 'bg-primary' : 'bg-muted'}`}>
+                  <div className={`w-9 h-5 rounded-full relative cursor-pointer ${pref.enabled ? 'bg-primary' : 'bg-muted'}`}>
                     <div className={`absolute w-4 h-4 rounded-full bg-white top-0.5 transition-all ${pref.enabled ? 'right-0.5' : 'left-0.5'}`}></div>
                   </div>
                 </div>
@@ -165,7 +194,7 @@ const ProfilePage = () => {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span>Share Activity Data</span>
-                  <div className="w-9 h-5 rounded-full relative bg-muted">
+                  <div className="w-9 h-5 rounded-full relative bg-muted cursor-pointer">
                     <div className="absolute w-4 h-4 rounded-full bg-white top-0.5 left-0.5"></div>
                   </div>
                 </div>
@@ -226,7 +255,6 @@ const ProfilePage = () => {
           <div className="grid gap-4 py-4">
             <div className="flex items-center space-x-4">
               <Avatar className="h-16 w-16 border-2 border-primary">
-                <AvatarImage src={editedUserData.avatarUrl} alt={editedUserData.name} />
                 <AvatarFallback>{editedUserData.name.charAt(0)}</AvatarFallback>
               </Avatar>
               <Button size="sm" variant="outline">Change Avatar</Button>
@@ -257,6 +285,59 @@ const ProfilePage = () => {
             </Button>
             <Button onClick={handleSaveProfile}>
               <Check size={14} className="mr-1" /> Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Pet Dialog */}
+      <Dialog open={isAddPetDialogOpen} onOpenChange={setIsAddPetDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New Pet</DialogTitle>
+            <DialogDescription>
+              Add information about your pet here.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="pet-name">Pet Name</Label>
+              <Input 
+                id="pet-name" 
+                value={newPet.name} 
+                onChange={(e) => setNewPet({...newPet, name: e.target.value})} 
+                placeholder="Buddy"
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="pet-type">Pet Type/Breed</Label>
+              <Input 
+                id="pet-type" 
+                value={newPet.type} 
+                onChange={(e) => setNewPet({...newPet, type: e.target.value})} 
+                placeholder="Golden Retriever"
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="pet-age">Pet Age</Label>
+              <Input 
+                id="pet-age" 
+                value={newPet.age} 
+                onChange={(e) => setNewPet({...newPet, age: e.target.value})} 
+                placeholder="2 years"
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddPetDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddPet} disabled={!newPet.name || !newPet.type || !newPet.age}>
+              Add Pet
             </Button>
           </DialogFooter>
         </DialogContent>

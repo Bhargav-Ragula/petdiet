@@ -1,9 +1,18 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Activity, Calendar, FileText, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Progress } from "@/components/ui/progress";
 import AnalyticsWidget from "@/components/widgets/AnalyticsWidget";
 
 // Widget types
@@ -17,91 +26,32 @@ interface Widget {
   icon: JSX.Element;
 }
 
-// Mock activity data
-const recentActivities = [
-  {
-    id: 1,
-    type: "Walk",
-    petName: "Buddy",
-    duration: "30 min",
-    date: "Today, 10:30 AM",
-    icon: "🦮"
-  },
-  {
-    id: 2,
-    type: "Play",
-    petName: "Luna",
-    duration: "15 min",
-    date: "Yesterday, 4:45 PM",
-    icon: "🎾"
-  }
-];
-
-// Mock analytics data
-const analyticsData = [
-  { day: 'Mon', minutes: 35 },
-  { day: 'Tue', minutes: 20 },
-  { day: 'Wed', minutes: 45 },
-  { day: 'Thu', minutes: 30 },
-  { day: 'Fri', minutes: 60 },
-  { day: 'Sat', minutes: 75 },
-  { day: 'Sun', minutes: 45 },
-];
-
-// Mock notes
-const notesData = [
-  {
-    id: 1,
-    title: "Vaccination Reminder",
-    content: "Buddy's annual vaccines are due next month.",
-    date: "2025-04-10"
-  },
-  {
-    id: 2,
-    title: "New Food Trial",
-    content: "Started grain-free kibble today.",
-    date: "2025-04-15"
-  }
-];
-
-// Mock goals
-const goals = [
-  {
-    id: 1,
-    name: "Daily walk",
-    target: "30 minutes",
-    progress: 75,
-    icon: "🦮"
-  },
-  {
-    id: 2,
-    name: "Weekly playtime",
-    target: "3 hours",
-    progress: 60,
-    icon: "🎾"
-  }
-];
-
-const ActivityWidget = () => (
+const ActivityWidget = ({ activities = [] }) => (
   <Card>
     <CardHeader>
       <CardTitle className="text-base">Recent Activities</CardTitle>
     </CardHeader>
     <CardContent className="space-y-3">
-      {recentActivities.map(activity => (
-        <div key={activity.id} className="flex items-center space-x-3 p-3 rounded-lg border">
-          <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-lg">
-            {activity.icon}
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium">{activity.type}</p>
-            <div className="flex items-center justify-between">
-              <p className="text-xs text-muted-foreground">{activity.petName}</p>
-              <p className="text-xs text-muted-foreground">{activity.date}</p>
+      {activities.length === 0 ? (
+        <div className="text-center py-6 text-muted-foreground">
+          No activities yet. Add your first activity in the tracker.
+        </div>
+      ) : (
+        activities.map(activity => (
+          <div key={activity.id} className="flex items-center space-x-3 p-3 rounded-lg border">
+            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-lg">
+              {activity.icon}
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium">{activity.type}</p>
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-muted-foreground">{activity.petName}</p>
+                <p className="text-xs text-muted-foreground">{activity.date}</p>
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        ))
+      )}
     </CardContent>
     <CardFooter>
       <Button variant="outline" size="sm" className="w-full" onClick={() => window.location.href = "/tracker"}>
@@ -111,53 +61,65 @@ const ActivityWidget = () => (
   </Card>
 );
 
-const NotesWidget = () => (
+const NotesWidget = ({ notes = [] }) => (
   <Card>
     <CardHeader>
       <CardTitle className="text-base">Pet Notes</CardTitle>
     </CardHeader>
     <CardContent className="space-y-2">
-      {notesData.map(note => (
-        <div key={note.id} className="p-2 border rounded-md">
-          <p className="text-sm font-medium">{note.title}</p>
-          <p className="text-xs text-muted-foreground">{note.content}</p>
-          <p className="text-xs text-muted-foreground mt-1">{note.date}</p>
+      {notes.length === 0 ? (
+        <div className="text-center py-6 text-muted-foreground">
+          No notes yet. Add your first note to keep track of important information.
         </div>
-      ))}
+      ) : (
+        notes.map(note => (
+          <div key={note.id} className="p-2 border rounded-md">
+            <p className="text-sm font-medium">{note.title}</p>
+            <p className="text-xs text-muted-foreground">{note.content}</p>
+            <p className="text-xs text-muted-foreground mt-1">{note.date}</p>
+          </div>
+        ))
+      )}
     </CardContent>
     <CardFooter>
-      <Button variant="outline" size="sm" className="w-full">
+      <Button variant="outline" size="sm" className="w-full" onClick={() => window.location.href = "/tracker?tab=notes"}>
         <Plus size={14} className="mr-1" /> Add Note
       </Button>
     </CardFooter>
   </Card>
 );
 
-const GoalsWidget = () => (
+const GoalsWidget = ({ goals = [] }) => (
   <Card>
     <CardHeader>
       <CardTitle className="text-base">Pet Goals</CardTitle>
     </CardHeader>
     <CardContent className="space-y-3">
-      {goals.map(goal => (
-        <div key={goal.id} className="flex items-center space-x-3 p-2 rounded-lg border">
-          <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-lg">
-            {goal.icon}
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium">{goal.name}</p>
-            <div className="w-full bg-muted rounded-full h-1.5 mt-1">
-              <div 
-                className="bg-primary h-1.5 rounded-full" 
-                style={{ width: `${goal.progress}%` }}
-              />
+      {goals.length === 0 ? (
+        <div className="text-center py-6 text-muted-foreground">
+          No goals yet. Set your first goal in the tracker.
+        </div>
+      ) : (
+        goals.map(goal => (
+          <div key={goal.id} className="flex items-center space-x-3 p-2 rounded-lg border">
+            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-lg">
+              {goal.icon}
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium">{goal.name}</p>
+              <div className="w-full bg-muted rounded-full h-1.5 mt-1">
+                <div 
+                  className="bg-primary h-1.5 rounded-full" 
+                  style={{ width: `${goal.progress}%` }}
+                />
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        ))
+      )}
     </CardContent>
     <CardFooter>
-      <Button variant="outline" size="sm" className="w-full" onClick={() => window.location.href = "/tracker"}>
+      <Button variant="outline" size="sm" className="w-full" onClick={() => window.location.href = "/tracker?tab=goals"}>
         View All Goals
       </Button>
     </CardFooter>
@@ -166,14 +128,8 @@ const GoalsWidget = () => (
 
 const Index = () => {
   const navigate = useNavigate();
-  const [widgets, setWidgets] = useState<Widget[]>([
-    { 
-      id: "tracker-1", 
-      type: "tracker", 
-      title: "Recent Activities", 
-      icon: <Activity size={16} />
-    }
-  ]);
+  const [widgets, setWidgets] = useState<Widget[]>([]);
+  const [isWidgetDialogOpen, setIsWidgetDialogOpen] = useState(false);
 
   const addWidget = (type: WidgetType) => {
     const newWidget: Widget = {
@@ -191,6 +147,7 @@ const Index = () => {
           : <Calendar size={16} />
     };
     setWidgets([...widgets, newWidget]);
+    setIsWidgetDialogOpen(false);
     toast.success(`Added ${newWidget.title} widget`);
   };
 
@@ -213,7 +170,7 @@ const Index = () => {
                 <X size={16} />
               </Button>
             </div>
-            <ActivityWidget />
+            <ActivityWidget activities={[]} />
           </div>
         );
       case "notes":
@@ -228,7 +185,7 @@ const Index = () => {
                 <X size={16} />
               </Button>
             </div>
-            <NotesWidget />
+            <NotesWidget notes={[]} />
           </div>
         );
       case "goals":
@@ -243,7 +200,7 @@ const Index = () => {
                 <X size={16} />
               </Button>
             </div>
-            <GoalsWidget />
+            <GoalsWidget goals={[]} />
           </div>
         );
       default:
@@ -260,32 +217,45 @@ const Index = () => {
         <p className="text-muted-foreground">Customize your home screen</p>
       </div>
       
-      <div className="flex justify-between items-center">
-        <div className="space-x-2">
-          <Button variant="outline" onClick={() => addWidget("tracker")}>
-            <Activity className="mr-2" size={16} />
-            Add Activity Widget
-          </Button>
-          
-          <Button variant="outline" onClick={() => addWidget("notes")}>
-            <FileText className="mr-2" size={16} />
-            Add Notes Widget
-          </Button>
-          
-          <Button variant="outline" onClick={() => addWidget("goals")}>
-            <Calendar className="mr-2" size={16} />
-            Add Goals Widget
-          </Button>
-        </div>
-        
-        <Button onClick={() => navigate("/discover")}>
-          View AI Plans
+      <div className="flex justify-center">
+        <Button onClick={() => setIsWidgetDialogOpen(true)}>
+          <Plus className="mr-2" size={16} />
+          Add Widget
         </Button>
       </div>
 
       <div className="space-y-8">
         {widgets.map(renderWidget)}
       </div>
+      
+      {/* Widget Selection Dialog */}
+      <Dialog open={isWidgetDialogOpen} onOpenChange={setIsWidgetDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Widget</DialogTitle>
+            <DialogDescription>Select the widget type you want to add to your dashboard</DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4">
+            <Button variant="outline" className="h-auto py-6 flex flex-col items-center" onClick={() => addWidget("tracker")}>
+              <Activity size={24} className="mb-2" />
+              <span className="font-medium">Activity Widget</span>
+              <span className="text-xs text-muted-foreground mt-1">Track recent pet activities</span>
+            </Button>
+            
+            <Button variant="outline" className="h-auto py-6 flex flex-col items-center" onClick={() => addWidget("notes")}>
+              <FileText size={24} className="mb-2" />
+              <span className="font-medium">Notes Widget</span>
+              <span className="text-xs text-muted-foreground mt-1">Keep important pet notes</span>
+            </Button>
+            
+            <Button variant="outline" className="h-auto py-6 flex flex-col items-center" onClick={() => addWidget("goals")}>
+              <Calendar size={24} className="mb-2" />
+              <span className="font-medium">Goals Widget</span>
+              <span className="text-xs text-muted-foreground mt-1">Track pet care goals</span>
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
