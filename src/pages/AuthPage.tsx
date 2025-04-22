@@ -70,6 +70,54 @@ const AuthPage = () => {
     }
   }, [user, navigate]);
 
+  // Add new effect to handle email confirmation
+  useEffect(() => {
+    const handleEmailConfirmation = async () => {
+      const hashParams = new URLSearchParams(location.hash.substring(1));
+      const accessToken = hashParams.get('access_token');
+      const refreshToken = hashParams.get('refresh_token');
+      const type = hashParams.get('type');
+
+      if (type === 'email-confirmation' || type === 'signup' || type === 'recovery') {
+        setLoading(true);
+        clearError();
+        
+        try {
+          const { data: { session }, error } = await supabase.auth.getSession();
+          
+          if (error) {
+            console.error("Session error:", error);
+            setError(error.message);
+            toast({
+              title: "Verification failed",
+              description: error.message,
+              variant: "destructive",
+            });
+          } else if (session) {
+            console.log("Email verified and logged in successfully");
+            toast({
+              title: "Success!",
+              description: "Your email has been verified and you're now logged in.",
+            });
+            // The auth state listener in AuthContext will handle the navigation
+          }
+        } catch (err: any) {
+          console.error("Error during email confirmation:", err);
+          setError(err?.message || "An error occurred during email verification");
+          toast({
+            title: "Error",
+            description: err?.message || "An error occurred during email verification",
+            variant: "destructive",
+          });
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    handleEmailConfirmation();
+  }, [location.hash, navigate]);
+
   const clearError = () => setError(null);
 
   const handleSignUp = async (e: React.FormEvent) => {
