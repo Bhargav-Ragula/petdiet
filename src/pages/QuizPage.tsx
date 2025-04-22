@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -110,6 +109,11 @@ const QuizPage = () => {
   const [correctAnswers, setCorrectAnswers] = useState(0);
   const [loading, setLoading] = useState(true);
   
+  const [feedback, setFeedback] = useState<{
+    message: string;
+    isCorrect: boolean;
+  } | null>(null);
+
   useEffect(() => {
     // Simulate loading time for AI generated quiz
     const timer = setTimeout(() => {
@@ -179,13 +183,37 @@ const QuizPage = () => {
     setSelectedOption(value);
     setAnswers({ ...answers, [question.id]: value });
     
-    // Check if answer is correct
+    // Check if answer is correct and provide feedback
     const selectedOption = question.options.find(option => option.value === value);
-    if (selectedOption && selectedOption.correct) {
-      // Correct answer
+    if (selectedOption) {
+      const isCorrect = selectedOption.correct;
+      let message = "";
+      
+      if (isCorrect) {
+        const positiveMessages = [
+          "Excellent! You've got it right!",
+          "Perfect answer! Keep it up!",
+          "Wonderful! You really know your stuff!",
+          "Outstanding! That's exactly right!",
+          "Fantastic job! You're doing great!"
+        ];
+        message = positiveMessages[Math.floor(Math.random() * positiveMessages.length)];
+      } else {
+        const correctAnswer = question.options.find(opt => opt.correct)?.text;
+        const encouragingMessages = [
+          `Not quite. The correct answer is: ${correctAnswer}`,
+          `Good try! But the right answer is: ${correctAnswer}`,
+          `Keep learning! The correct answer is: ${correctAnswer}`,
+          `Almost there! The right answer is: ${correctAnswer}`,
+          `Nice attempt! The correct answer is: ${correctAnswer}`
+        ];
+        message = encouragingMessages[Math.floor(Math.random() * encouragingMessages.length)];
+      }
+      
+      setFeedback({ message, isCorrect });
     }
   };
-  
+
   const handleNext = () => {
     // Check if current answer is correct before moving on
     const currentAnswer = answers[question.id];
@@ -243,18 +271,36 @@ const QuizPage = () => {
                   key={option.value}
                   className={`
                     p-4 rounded-lg border-2 transition-all cursor-pointer flex justify-between items-center
-                    ${selectedOption === option.value ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/30'}
+                    ${selectedOption === option.value 
+                      ? option.correct 
+                        ? 'border-green-500 bg-green-50' 
+                        : 'border-red-500 bg-red-50'
+                      : 'border-muted hover:border-primary/30'}
+                    ${selectedOption && option.correct && 'border-green-500 bg-green-50'}
                   `}
-                  onClick={() => handleOptionSelect(option.value)}
+                  onClick={() => !selectedOption && handleOptionSelect(option.value)}
                 >
                   <span>{option.text}</span>
                   {selectedOption === option.value && (
-                    <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center">
+                    <div className={`h-5 w-5 rounded-full ${option.correct ? 'bg-green-500' : 'bg-red-500'} flex items-center justify-center`}>
+                      <Check className="h-3 w-3 text-white" />
+                    </div>
+                  )}
+                  {selectedOption && option.correct && selectedOption !== option.value && (
+                    <div className="h-5 w-5 rounded-full bg-green-500 flex items-center justify-center">
                       <Check className="h-3 w-3 text-white" />
                     </div>
                   )}
                 </div>
               ))}
+              
+              {feedback && (
+                <div className={`mt-4 p-4 rounded-lg ${feedback.isCorrect ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                  <p className={`text-sm ${feedback.isCorrect ? 'text-green-700' : 'text-red-700'}`}>
+                    {feedback.message}
+                  </p>
+                </div>
+              )}
             </CardContent>
             <CardFooter className="flex justify-between">
               <Button
