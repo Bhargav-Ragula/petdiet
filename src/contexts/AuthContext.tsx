@@ -52,10 +52,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signInWithGoogle = async () => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      // Get the current URL to use for redirection
+      const origin = window.location.origin;
+      const redirectTo = `${origin}/auth`;
+      
+      console.log("Starting Google sign-in with redirect to:", redirectTo);
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth`
+          redirectTo: redirectTo,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
         }
       });
 
@@ -63,6 +73,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.error('Error signing in with Google:', error);
         throw error;
       }
+      
+      console.log("Google sign-in initialized:", data);
+      // The redirect happens automatically, so there's no need to navigate
     } catch (error) {
       console.error('Exception during Google sign in:', error);
       throw error;

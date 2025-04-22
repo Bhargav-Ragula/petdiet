@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,15 +10,58 @@ import { useAuth } from "@/hooks/useAuth";
 import { Separator } from "@/components/ui/separator";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { supabase } from "@/integrations/supabase/client";
 
 const AuthPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user, signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth();
+
+  // Check for hash fragment on load (for OAuth redirects)
+  useEffect(() => {
+    const handleAuthRedirect = async () => {
+      // If we have a hash in the URL, process it as an OAuth redirect
+      if (location.hash) {
+        setGoogleLoading(true);
+        clearError();
+        
+        try {
+          const { data, error } = await supabase.auth.getSession();
+          if (error) {
+            setError(`Authentication error: ${error.message}`);
+            toast({
+              title: "Sign in failed",
+              description: error.message,
+              variant: "destructive",
+            });
+          } else if (data?.session) {
+            toast({
+              title: "Success!",
+              description: "You've successfully signed in with Google.",
+            });
+            // The auth state listener will handle navigation
+          }
+        } catch (err: any) {
+          console.error("Error processing OAuth redirect:", err);
+          setError(err?.message || "An error occurred during sign in");
+          toast({
+            title: "Error",
+            description: err?.message || "An error occurred during sign in",
+            variant: "destructive",
+          });
+        } finally {
+          setGoogleLoading(false);
+        }
+      }
+    };
+
+    handleAuthRedirect();
+  }, [location.hash, navigate]);
 
   // Redirect if user is already authenticated
   useEffect(() => {
