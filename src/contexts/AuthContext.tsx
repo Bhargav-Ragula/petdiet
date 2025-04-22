@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useEffect, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,7 +28,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // First set up the auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
         console.log("Auth state changed:", event, currentSession);
@@ -39,7 +37,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     );
 
-    // Then check for an existing session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       console.log("Got existing session:", currentSession);
       setSession(currentSession);
@@ -52,7 +49,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signInWithGoogle = async () => {
     try {
-      // Get the current URL to use for redirection
       const origin = window.location.origin;
       const redirectTo = `${origin}/auth`;
       
@@ -75,7 +71,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       
       console.log("Google sign-in initialized:", data);
-      // The redirect happens automatically, so there's no need to navigate
     } catch (error) {
       console.error('Exception during Google sign in:', error);
       throw error;
@@ -104,11 +99,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth`
+          emailRedirectTo: `${window.location.origin}/auth`,
+          data: {
+            email_confirmed: true
+          }
         }
       });
       
       console.log("Sign up result:", data, error);
+      
+      if (!error && data.user) {
+        return await signInWithEmail(email, password);
+      }
       
       return { error };
     } catch (err) {
