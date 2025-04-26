@@ -170,19 +170,6 @@ const ProfilePage = () => {
               </Card>
             ))
           )}
-          
-          <Card className="bg-muted/30 border-dashed">
-            <CardContent className="p-6 flex flex-col items-center justify-center text-center">
-              <div className="rounded-full bg-muted p-3 mb-3">
-                <Heart size={24} className="text-primary" />
-              </div>
-              <h4 className="font-medium mb-1">Find Your Perfect Match</h4>
-              <p className="text-sm text-muted-foreground mb-3">
-                Take our pet matching quiz to find the perfect pet for your lifestyle.
-              </p>
-              <Button variant="outline" size="sm" onClick={() => navigate("/quiz")}>Start Quiz</Button>
-            </CardContent>
-          </Card>
         </TabsContent>
         
         <TabsContent value="account" className="space-y-4">
