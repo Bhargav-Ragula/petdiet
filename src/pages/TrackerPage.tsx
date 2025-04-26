@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,20 +23,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import AnalyticsWidget from "@/components/widgets/AnalyticsWidget";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
-
-// Mock data for analytics
-const analyticsData = [
-  { day: 'Mon', minutes: 35 },
-  { day: 'Tue', minutes: 20 },
-  { day: 'Wed', minutes: 45 },
-  { day: 'Thu', minutes: 30 },
-  { day: 'Fri', minutes: 60 },
-  { day: 'Sat', minutes: 75 },
-  { day: 'Sun', minutes: 45 },
-];
 
 const ActivityCard = ({ activity, onEdit, onDelete }) => (
   <Card className="mb-3">
@@ -201,7 +188,6 @@ const TrackerPage = () => {
   const fileInputRef = useRef(null);
 
   useEffect(() => {
-    // Check authentication status
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -213,14 +199,12 @@ const TrackerPage = () => {
       setUserId(session.user.id);
       setIsAuthenticated(true);
       
-      // Get tab from URL if available
       const params = new URLSearchParams(location.search);
       const tab = params.get('tab');
       if (tab && (tab === 'activities' || tab === 'goals' || tab === 'notes')) {
         setActiveTab(tab);
       }
       
-      // Fetch data
       fetchActivities();
       fetchGoals();
       fetchNotes();
@@ -329,13 +313,10 @@ const TrackerPage = () => {
         toast.success(`New ${newActivity.type} activity added`);
       }
       
-      // Set insights flag to true once at least one activity is added
       setHasInsights(true);
       
-      // Refresh activities
       fetchActivities();
       
-      // Reset form and close dialog
       setIsNewActivityDialogOpen(false);
       setIsEditMode(false);
       setCurrentEditId(null);
@@ -388,10 +369,8 @@ const TrackerPage = () => {
         toast.success("New goal added");
       }
       
-      // Refresh goals
       fetchGoals();
       
-      // Reset form and close dialog
       setIsNewGoalDialogOpen(false);
       setIsEditMode(false);
       setCurrentEditId(null);
@@ -414,7 +393,6 @@ const TrackerPage = () => {
         return;
       }
       
-      // Extract tags from content
       const tags = newNote.content.match(/#\w+/g) 
         ? newNote.content.match(/#\w+/g).map(tag => tag.substring(1)) 
         : [];
@@ -449,10 +427,8 @@ const TrackerPage = () => {
         toast.success("New note added");
       }
       
-      // Refresh notes
       fetchNotes();
       
-      // Reset form and close dialog
       setIsNewNoteDialogOpen(false);
       setIsEditMode(false);
       setCurrentEditId(null);
@@ -489,11 +465,9 @@ const TrackerPage = () => {
         
       if (error) throw error;
       
-      // Update activities state
       setActivities(prev => prev.filter(activity => activity.id !== id));
       toast.info("Activity removed");
       
-      // Update insights flag if no activities are left
       if (activities.length <= 1) {
         setHasInsights(false);
       }
@@ -524,7 +498,6 @@ const TrackerPage = () => {
         
       if (error) throw error;
       
-      // Update goals state
       setGoals(prev => prev.filter(goal => goal.id !== id));
       toast.info("Goal removed");
     } catch (error) {
@@ -554,7 +527,6 @@ const TrackerPage = () => {
         
       if (error) throw error;
       
-      // Update notes state
       setNotes(prev => prev.filter(note => note.id !== id));
       toast.info("Note removed");
     } catch (error) {
@@ -624,28 +596,17 @@ const TrackerPage = () => {
               </CardContent>
             </Card>
           ) : (
-            <>
-              <div className="mb-4">
-                <AnalyticsWidget 
-                  data={analyticsData} 
-                  title="Activity Overview" 
-                  description="Daily activity minutes"
-                  showViewDetails={false}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Recent Activities</h3>
+              {activities.map(activity => (
+                <ActivityCard 
+                  key={activity.id} 
+                  activity={activity} 
+                  onEdit={handleEditActivity}
+                  onDelete={handleDeleteActivity}
                 />
-              </div>
-              
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Recent Activities</h3>
-                {activities.map(activity => (
-                  <ActivityCard 
-                    key={activity.id} 
-                    activity={activity} 
-                    onEdit={handleEditActivity}
-                    onDelete={handleDeleteActivity}
-                  />
-                ))}
-              </div>
-            </>
+              ))}
+            </div>
           )}
         </TabsContent>
         
@@ -762,7 +723,6 @@ const TrackerPage = () => {
         </TabsContent>
       </Tabs>
       
-      {/* New Activity Dialog */}
       <Dialog open={isNewActivityDialogOpen} onOpenChange={setIsNewActivityDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -843,7 +803,6 @@ const TrackerPage = () => {
         </DialogContent>
       </Dialog>
       
-      {/* New Goal Dialog */}
       <Dialog open={isNewGoalDialogOpen} onOpenChange={setIsNewGoalDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -922,7 +881,6 @@ const TrackerPage = () => {
         </DialogContent>
       </Dialog>
       
-      {/* New Note Dialog */}
       <Dialog open={isNewNoteDialogOpen} onOpenChange={setIsNewNoteDialogOpen}>
         <DialogContent>
           <DialogHeader>
