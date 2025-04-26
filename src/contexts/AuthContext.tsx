@@ -6,7 +6,6 @@ interface AuthContextProps {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<{ error: any | null }>;
   signUpWithEmail: (email: string, password: string) => Promise<{ error: any | null }>;
   signOut: () => Promise<void>;
@@ -16,7 +15,6 @@ export const AuthContext = createContext<AuthContextProps>({
   user: null,
   session: null,
   loading: true,
-  signInWithGoogle: async () => {},
   signInWithEmail: async () => ({ error: null }),
   signUpWithEmail: async () => ({ error: null }),
   signOut: async () => {},
@@ -46,36 +44,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     return () => subscription.unsubscribe();
   }, []);
-
-  const signInWithGoogle = async () => {
-    try {
-      const origin = window.location.origin;
-      const redirectTo = `${origin}/auth`;
-      
-      console.log("Starting Google sign-in with redirect to:", redirectTo);
-      
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: redirectTo,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          }
-        }
-      });
-
-      if (error) {
-        console.error('Error signing in with Google:', error);
-        throw error;
-      }
-      
-      console.log("Google sign-in initialized:", data);
-    } catch (error) {
-      console.error('Exception during Google sign in:', error);
-      throw error;
-    }
-  };
 
   const signInWithEmail = async (email: string, password: string) => {
     try {
@@ -137,7 +105,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       user, 
       session, 
       loading, 
-      signInWithGoogle, 
       signInWithEmail, 
       signUpWithEmail,
       signOut 
