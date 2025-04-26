@@ -1,9 +1,10 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dog, Shield, LogOut, X, Check, Pencil, Plus, Image as ImageIcon } from "lucide-react";
+import { Dog, Shield, LogOut, X, Check, Pencil, Plus, Image as ImageIcon, Heart } from "lucide-react";
 import { 
   Dialog,
   DialogContent,
