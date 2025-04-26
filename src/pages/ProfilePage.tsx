@@ -1,10 +1,9 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Bell, Settings, User, Heart, Dog, Shield, LogOut, X, Check, Pencil, Plus, Image as ImageIcon } from "lucide-react";
+import { Dog, Shield, LogOut, X, Check, Pencil, Plus, Image as ImageIcon } from "lucide-react";
 import { 
   Dialog,
   DialogContent,
@@ -17,28 +16,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-
-// Mock user data
-const userData = {
-  name: "Alex Johnson",
-  email: "alex@example.com",
-  joinedDate: "January 2023"
-};
-
-// Mock preferences
-const preferences = [
-  { name: "Email Notifications", enabled: true },
-  { name: "App Notifications", enabled: true },
-  { name: "Weekly Reports", enabled: false },
-  { name: "Activity Reminders", enabled: true }
-];
+import { useAuth } from "@/hooks/useAuth";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
+  const { user, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState("pets");
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isAddPetDialogOpen, setIsAddPetDialogOpen] = useState(false);
-  const [editedUserData, setEditedUserData] = useState({ ...userData });
+  const [editedUserData, setEditedUserData] = useState({
+    name: user?.user_metadata?.full_name || user?.email?.split('@')[0] || '',
+    email: user?.email || ''
+  });
   const [petProfiles, setPetProfiles] = useState([]);
   const [newPet, setNewPet] = useState({
     name: "",
@@ -46,9 +35,18 @@ const ProfilePage = () => {
     age: "",
   });
 
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigate('/auth');
+      toast.success('Signed out successfully');
+    } catch (error) {
+      toast.error('Error signing out');
+    }
+  };
+
   const handleSaveProfile = () => {
-    // In a real app, this would send the data to an API
-    // For now, we'll just show a success message
+    // In a real app, this would update user metadata
     toast.success("Profile updated successfully!");
     setIsEditDialogOpen(false);
   };
@@ -76,6 +74,11 @@ const ProfilePage = () => {
     toast.info("Pet removed");
   };
 
+  if (!user) {
+    navigate('/auth');
+    return null;
+  }
+
   return (
     <div className="py-6 space-y-6">
       <div>
@@ -85,11 +88,11 @@ const ProfilePage = () => {
 
       <div className="flex items-center space-x-4">
         <Avatar className="h-16 w-16 border-2 border-primary">
-          <AvatarFallback>{userData.name.charAt(0)}</AvatarFallback>
+          <AvatarFallback>{editedUserData.name.charAt(0)}</AvatarFallback>
         </Avatar>
         <div>
-          <h2 className="text-xl font-semibold">{userData.name}</h2>
-          <p className="text-sm text-muted-foreground">Member since {userData.joinedDate}</p>
+          <h2 className="text-xl font-semibold">{editedUserData.name}</h2>
+          <p className="text-sm text-muted-foreground">Member since {new Date(user.created_at).toLocaleDateString()}</p>
         </div>
         <Button variant="outline" size="sm" className="ml-auto" onClick={() => setIsEditDialogOpen(true)}>
           <Pencil size={14} className="mr-1" /> Edit Profile
@@ -97,9 +100,8 @@ const ProfilePage = () => {
       </div>
 
       <Tabs defaultValue="pets" className="w-full">
-        <TabsList className="grid grid-cols-3 mb-4">
+        <TabsList className="grid grid-cols-2 mb-4">
           <TabsTrigger value="pets">My Pets</TabsTrigger>
-          <TabsTrigger value="preferences">Preferences</TabsTrigger>
           <TabsTrigger value="account">Account</TabsTrigger>
         </TabsList>
         
@@ -165,66 +167,23 @@ const ProfilePage = () => {
           </Card>
         </TabsContent>
         
-        <TabsContent value="preferences" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center">
-                <Bell className="mr-2 h-5 w-5 text-primary" /> Notifications
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {preferences.map((pref, index) => (
-                <div key={index} className="flex items-center justify-between py-2 border-b last:border-0">
-                  <span>{pref.name}</span>
-                  <div className={`w-9 h-5 rounded-full relative cursor-pointer ${pref.enabled ? 'bg-primary' : 'bg-muted'}`}>
-                    <div className={`absolute w-4 h-4 rounded-full bg-white top-0.5 transition-all ${pref.enabled ? 'right-0.5' : 'left-0.5'}`}></div>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center">
-                <Shield className="mr-2 h-5 w-5 text-primary" /> Privacy
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span>Share Activity Data</span>
-                  <div className="w-9 h-5 rounded-full relative bg-muted cursor-pointer">
-                    <div className="absolute w-4 h-4 rounded-full bg-white top-0.5 left-0.5"></div>
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Privacy settings control how your information is used within the app.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
         <TabsContent value="account" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg flex items-center">
-                <User className="mr-2 h-5 w-5 text-primary" /> Account Information
-              </CardTitle>
+              <CardTitle className="text-lg">Account Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               <div className="flex justify-between py-2 border-b">
                 <span className="text-muted-foreground">Email</span>
-                <span>{userData.email}</span>
+                <span>{user.email}</span>
               </div>
               <div className="flex justify-between py-2 border-b">
                 <span className="text-muted-foreground">Name</span>
-                <span>{userData.name}</span>
+                <span>{editedUserData.name}</span>
               </div>
               <div className="flex justify-between py-2">
-                <span className="text-muted-foreground">Password</span>
-                <span>••••••••</span>
+                <span className="text-muted-foreground">Member Since</span>
+                <span>{new Date(user.created_at).toLocaleDateString()}</span>
               </div>
             </CardContent>
             <CardFooter>
@@ -235,7 +194,7 @@ const ProfilePage = () => {
           </Card>
           
           <div className="pt-4">
-            <Button variant="destructive" className="w-full">
+            <Button variant="destructive" className="w-full" onClick={handleSignOut}>
               <LogOut className="mr-2 h-4 w-4" /> Sign Out
             </Button>
           </div>
