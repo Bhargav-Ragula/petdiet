@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,14 +26,24 @@ const ProfilePage = () => {
   const [isAddPetDialogOpen, setIsAddPetDialogOpen] = useState(false);
   const [editedUserData, setEditedUserData] = useState({
     name: user?.user_metadata?.full_name || user?.email?.split('@')[0] || '',
-    email: user?.email || ''
+    avatarUrl: user?.user_metadata?.avatar_url || ''
   });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [petProfiles, setPetProfiles] = useState([]);
   const [newPet, setNewPet] = useState({
     name: "",
     type: "",
     age: "",
   });
+
+  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      const imageUrl = URL.createObjectURL(file);
+      setEditedUserData({ ...editedUserData, avatarUrl: imageUrl });
+    }
+  };
 
   const handleSignOut = async () => {
     try {
@@ -44,12 +53,6 @@ const ProfilePage = () => {
     } catch (error) {
       toast.error('Error signing out');
     }
-  };
-
-  const handleSaveProfile = () => {
-    // In a real app, this would update user metadata
-    toast.success("Profile updated successfully!");
-    setIsEditDialogOpen(false);
   };
 
   const handleAddPet = () => {
@@ -75,6 +78,16 @@ const ProfilePage = () => {
     toast.info("Pet removed");
   };
 
+  const handleSaveProfile = () => {
+    // In a real app, this would update user metadata and upload the avatar
+    if (selectedFile) {
+      // Here you would typically upload the file to your storage
+      toast.success("Profile picture updated successfully!");
+    }
+    toast.success("Profile updated successfully!");
+    setIsEditDialogOpen(false);
+  };
+
   if (!user) {
     navigate('/auth');
     return null;
@@ -84,12 +97,16 @@ const ProfilePage = () => {
     <div className="py-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground">My Profile</h1>
-        <p className="text-muted-foreground">Manage your account & preferences</p>
+        <p className="text-muted-foreground">Manage your account</p>
       </div>
 
       <div className="flex items-center space-x-4">
         <Avatar className="h-16 w-16 border-2 border-primary">
-          <AvatarFallback>{editedUserData.name.charAt(0)}</AvatarFallback>
+          {editedUserData.avatarUrl ? (
+            <AvatarImage src={editedUserData.avatarUrl} alt="Profile" />
+          ) : (
+            <AvatarFallback>{editedUserData.name.charAt(0)}</AvatarFallback>
+          )}
         </Avatar>
         <div>
           <h2 className="text-xl font-semibold">{editedUserData.name}</h2>
@@ -215,9 +232,22 @@ const ProfilePage = () => {
           <div className="grid gap-4 py-4">
             <div className="flex items-center space-x-4">
               <Avatar className="h-16 w-16 border-2 border-primary">
-                <AvatarFallback>{editedUserData.name.charAt(0)}</AvatarFallback>
+                {editedUserData.avatarUrl ? (
+                  <AvatarImage src={editedUserData.avatarUrl} alt="Profile" />
+                ) : (
+                  <AvatarFallback>{editedUserData.name.charAt(0)}</AvatarFallback>
+                )}
               </Avatar>
-              <Button size="sm" variant="outline">Change Avatar</Button>
+              <div className="grid w-full max-w-sm items-center gap-1.5">
+                <Label htmlFor="avatar">Change Avatar</Label>
+                <Input 
+                  id="avatar" 
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  className="cursor-pointer"
+                />
+              </div>
             </div>
             
             <div className="grid gap-2">
@@ -226,15 +256,6 @@ const ProfilePage = () => {
                 id="name" 
                 value={editedUserData.name} 
                 onChange={(e) => setEditedUserData({...editedUserData, name: e.target.value})} 
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input 
-                id="email" 
-                value={editedUserData.email} 
-                onChange={(e) => setEditedUserData({...editedUserData, email: e.target.value})} 
               />
             </div>
           </div>
