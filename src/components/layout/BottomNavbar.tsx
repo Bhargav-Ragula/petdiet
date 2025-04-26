@@ -1,5 +1,5 @@
 
-import { Home, Activity, BarChart3, User } from "lucide-react";
+import { Home, Activity, Quiz, User } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 const BottomNavbar = () => {
@@ -12,7 +12,7 @@ const BottomNavbar = () => {
   const navigationItems = [
     { icon: Home, label: "Discover", path: "/" },
     { icon: Activity, label: "Tracker", path: "/tracker" },
-    { icon: BarChart3, label: "Insights", path: "/insights" },
+    { icon: Quiz, label: "Quiz", path: "/quiz" },
     { icon: User, label: "Profile", path: "/profile" },
   ];
 
