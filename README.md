@@ -2,6 +2,7 @@
 # PetPals AI Hub
 
 A modern web application that helps users find their perfect pet match through AI recommendations, track pet activities, view insights, and manage pet profiles.
+https://petdiet.lovable.app/
 
 ## Features
 
