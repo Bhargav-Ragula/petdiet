@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useEffect, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -66,18 +67,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth`,
-          data: {
-            email_confirmed: true
-          }
-        }
       });
       
       console.log("Sign up result:", data, error);
       
       if (!error && data.user) {
-        return { error: null };
+        // After successful signup, automatically sign in the user
+        const signInResult = await signInWithEmail(email, password);
+        return signInResult;
       }
       
       return { error };
