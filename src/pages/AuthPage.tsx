@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,7 +36,7 @@ const AuthPage = () => {
 
     try {
       const { error } = await signUpWithEmail(email, password);
-
+      
       if (error) {
         console.error("Sign up error:", error);
         setError(error.message || "Failed to sign up. Please try again.");
@@ -45,10 +46,14 @@ const AuthPage = () => {
           variant: "destructive",
         });
       } else {
-        toast({
-          title: "Success!",
-          description: "Check your email for the confirmation link or continue using the app if email verification is disabled.",
-        });
+        // Since email confirmation is disabled, proceed with automatic sign in
+        const { error: signInError } = await signInWithEmail(email, password);
+        if (!signInError) {
+          toast({
+            title: "Welcome!",
+            description: "Your account has been created and you're now signed in.",
+          });
+        }
       }
     } catch (error: any) {
       console.error("Exception during sign up:", error);
@@ -116,8 +121,9 @@ const AuthPage = () => {
         )}
 
         <Tabs defaultValue="signin" className="w-full">
-          <TabsList className="grid w-full grid-cols-1">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="signin">Sign In</TabsTrigger>
+            <TabsTrigger value="signup">Sign Up</TabsTrigger>
           </TabsList>
 
           <TabsContent value="signin">
@@ -160,6 +166,54 @@ const AuthPage = () => {
                     </>
                   ) : (
                     "Sign In"
+                  )}
+                </Button>
+              </CardFooter>
+            </form>
+          </TabsContent>
+
+          <TabsContent value="signup">
+            <form onSubmit={handleSignUp}>
+              <CardContent className="space-y-4 pt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="signup-email">Email</Label>
+                  <Input
+                    id="signup-email"
+                    type="email"
+                    placeholder="your.email@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    disabled={loading}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-password">Password</Label>
+                  <Input
+                    id="signup-password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    minLength={6}
+                    disabled={loading}
+                  />
+                  <p className="text-xs text-gray-500">Password must be at least 6 characters</p>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  type="submit" 
+                  className="w-full"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creating account...
+                    </>
+                  ) : (
+                    "Sign Up"
                   )}
                 </Button>
               </CardFooter>

@@ -77,7 +77,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.log("Sign up result:", data, error);
       
       if (!error && data.user) {
-        return await signInWithEmail(email, password);
+        return { error: null };
       }
       
       return { error };
