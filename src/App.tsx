@@ -38,6 +38,7 @@ const App = () => {
             <Route path="/training-plan" element={<MainLayout><TrainingPlanPage /></MainLayout>} />
             <Route path="/activities-plan" element={<MainLayout><ActivitiesPlanPage /></MainLayout>} />
             <Route path="/grooming-plan" element={<MainLayout><GroomingPlanPage /></MainLayout>} />
+            <Route path="/auth" element={<Navigate to="/home" replace />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
