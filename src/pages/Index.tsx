@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,7 +33,7 @@ const Index = () => {
     <div className="py-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground">
-          <span className="text-primary mr-2">🐾</span> PetCaring AI Dashboard
+          <span className="text-primary mr-2">🐾</span> AI Pet Planner
         </h1>
         <p className="text-muted-foreground">Customize your home screen</p>
       </div>

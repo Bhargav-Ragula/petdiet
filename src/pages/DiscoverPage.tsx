@@ -273,7 +273,7 @@ const DiscoverPage = () => {
     <div className="py-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground">
-          <span className="text-primary mr-2">🐾</span> PetCaring AI
+          <span className="text-primary mr-2">🐾</span> AI Pet Planner
         </h1>
         <p className="text-muted-foreground">Get AI-powered care plans for your pet</p>
       </div>
