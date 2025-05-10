@@ -177,65 +177,12 @@ const TrackerPage = () => {
     image: null
   });
   
-  const [activities, setActivities] = useState([
-    {
-      id: 1,
-      type: "Walk",
-      pet_name: "Buddy",
-      duration: "30 min",
-      location: "Local Park",
-      distance: "2.1 km",
-      icon: "🦮",
-      date: new Date().toISOString()
-    },
-    {
-      id: 2,
-      type: "Play",
-      pet_name: "Luna",
-      duration: "15 min",
-      location: "Backyard",
-      icon: "🎾",
-      date: new Date(Date.now() - 86400000).toISOString() // yesterday
-    }
-  ]);
+  // Initialize with empty arrays instead of pre-populated data
+  const [activities, setActivities] = useState([]);
+  const [goals, setGoals] = useState([]);
+  const [notes, setNotes] = useState([]);
   
-  const [goals, setGoals] = useState([
-    {
-      id: 1,
-      name: "Daily Walk",
-      target: "30 minutes",
-      progress: 75,
-      icon: "🦮"
-    },
-    {
-      id: 2,
-      name: "Training Session",
-      target: "3 times per week",
-      progress: 33,
-      icon: "🏆"
-    }
-  ]);
-  
-  const [notes, setNotes] = useState([
-    {
-      id: 1,
-      title: "Vet Appointment",
-      content: "Schedule annual checkup next month #health",
-      tags: ["health"],
-      date: new Date().toLocaleDateString(),
-      created_at: new Date().toISOString()
-    },
-    {
-      id: 2,
-      title: "New Food",
-      content: "Buddy seems to like the new kibble #diet",
-      tags: ["diet"],
-      date: new Date(Date.now() - 172800000).toLocaleDateString(), // 2 days ago
-      created_at: new Date(Date.now() - 172800000).toISOString()
-    }
-  ]);
-  
-  const [hasInsights, setHasInsights] = useState(true);
+  const [hasInsights, setHasInsights] = useState(false);
   
   const fileInputRef = useRef(null);
 
