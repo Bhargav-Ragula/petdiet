@@ -1,8 +1,8 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Activity, Calendar, Plus, Clock, MapPin, FileText, ChevronLeft, Edit, Trash, Upload, Image } from "lucide-react";
+import { Activity, Calendar, Plus, Clock, MapPin, FileText, Edit, Trash, Upload, Image } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { 
@@ -23,7 +23,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
 
 const ActivityCard = ({ activity, onEdit, onDelete }) => (
@@ -153,9 +152,7 @@ const TrackerPage = () => {
   const [isNewNoteDialogOpen, setIsNewNoteDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentEditId, setCurrentEditId] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userId, setUserId] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   
@@ -180,142 +177,112 @@ const TrackerPage = () => {
     image: null
   });
   
-  const [activities, setActivities] = useState([]);
-  const [goals, setGoals] = useState([]);
-  const [notes, setNotes] = useState([]);
-  const [hasInsights, setHasInsights] = useState(false);
+  const [activities, setActivities] = useState([
+    {
+      id: 1,
+      type: "Walk",
+      pet_name: "Buddy",
+      duration: "30 min",
+      location: "Local Park",
+      distance: "2.1 km",
+      icon: "🦮",
+      date: new Date().toISOString()
+    },
+    {
+      id: 2,
+      type: "Play",
+      pet_name: "Luna",
+      duration: "15 min",
+      location: "Backyard",
+      icon: "🎾",
+      date: new Date(Date.now() - 86400000).toISOString() // yesterday
+    }
+  ]);
+  
+  const [goals, setGoals] = useState([
+    {
+      id: 1,
+      name: "Daily Walk",
+      target: "30 minutes",
+      progress: 75,
+      icon: "🦮"
+    },
+    {
+      id: 2,
+      name: "Training Session",
+      target: "3 times per week",
+      progress: 33,
+      icon: "🏆"
+    }
+  ]);
+  
+  const [notes, setNotes] = useState([
+    {
+      id: 1,
+      title: "Vet Appointment",
+      content: "Schedule annual checkup next month #health",
+      tags: ["health"],
+      date: new Date().toLocaleDateString(),
+      created_at: new Date().toISOString()
+    },
+    {
+      id: 2,
+      title: "New Food",
+      content: "Buddy seems to like the new kibble #diet",
+      tags: ["diet"],
+      date: new Date(Date.now() - 172800000).toLocaleDateString(), // 2 days ago
+      created_at: new Date(Date.now() - 172800000).toISOString()
+    }
+  ]);
+  
+  const [hasInsights, setHasInsights] = useState(true);
   
   const fileInputRef = useRef(null);
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast.error("Please sign in to track activities");
-        navigate("/auth");
-        return;
-      }
-      
-      setUserId(session.user.id);
-      setIsAuthenticated(true);
-      
-      const params = new URLSearchParams(location.search);
-      const tab = params.get('tab');
-      if (tab && (tab === 'activities' || tab === 'goals' || tab === 'notes')) {
-        setActiveTab(tab);
-      }
-      
-      fetchActivities();
-      fetchGoals();
-      fetchNotes();
-    };
-    
-    checkAuth();
-  }, []);
-  
-  const fetchActivities = async () => {
+  const handleAddActivity = () => {
     try {
-      setIsLoading(true);
-      const { data, error } = await supabase
-        .from('pet_activities')
-        .select('*')
-        .order('created_at', { ascending: false });
-        
-      if (error) throw error;
-      
-      setActivities(data || []);
-      setHasInsights(data && data.length > 0);
-    } catch (error) {
-      console.error('Error fetching activities:', error);
-      toast.error('Failed to load activities');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  const fetchGoals = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('pet_goals')
-        .select('*')
-        .order('created_at', { ascending: false });
-        
-      if (error) throw error;
-      
-      setGoals(data || []);
-    } catch (error) {
-      console.error('Error fetching goals:', error);
-      toast.error('Failed to load goals');
-    }
-  };
-  
-  const fetchNotes = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('pet_notes')
-        .select('*')
-        .order('created_at', { ascending: false });
-        
-      if (error) throw error;
-      
-      setNotes(data || []);
-    } catch (error) {
-      console.error('Error fetching notes:', error);
-      toast.error('Failed to load notes');
-    }
-  };
-
-  const handleAddActivity = async () => {
-    try {
-      if (!userId) {
-        toast.error("Please sign in to track activities");
-        return;
-      }
-      
       if (isEditMode) {
-        const { error } = await supabase
-          .from('pet_activities')
-          .update({
-            type: newActivity.type,
-            pet_name: newActivity.petName,
-            duration: `${newActivity.duration} min`,
-            location: newActivity.location,
-            icon: newActivity.type === "Walk" ? "🦮" : 
-                  newActivity.type === "Play" ? "🎾" : 
-                  newActivity.type === "Training" ? "🏆" : 
-                  newActivity.type === "Grooming" ? "🧼" : 
-                  newActivity.type === "Vet Visit" ? "🩺" : "🐾"
-          })
-          .eq('id', currentEditId);
-          
-        if (error) throw error;
+        setActivities(prev => 
+          prev.map(activity => 
+            activity.id === currentEditId 
+              ? {
+                  ...activity,
+                  type: newActivity.type,
+                  pet_name: newActivity.petName,
+                  duration: `${newActivity.duration} min`,
+                  location: newActivity.location,
+                  icon: newActivity.type === "Walk" ? "🦮" : 
+                        newActivity.type === "Play" ? "🎾" : 
+                        newActivity.type === "Training" ? "🏆" : 
+                        newActivity.type === "Grooming" ? "🧼" : 
+                        newActivity.type === "Vet Visit" ? "🩺" : "🐾"
+                }
+              : activity
+          )
+        );
         
         toast.success("Activity updated successfully");
       } else {
-        const { error } = await supabase
-          .from('pet_activities')
-          .insert({
-            user_id: userId,
-            type: newActivity.type,
-            pet_name: newActivity.petName,
-            duration: `${newActivity.duration} min`,
-            location: newActivity.location,
-            distance: newActivity.type === "Walk" ? "2.1 km" : null,
-            icon: newActivity.type === "Walk" ? "🦮" : 
-                  newActivity.type === "Play" ? "🎾" : 
-                  newActivity.type === "Training" ? "🏆" : 
-                  newActivity.type === "Grooming" ? "🧼" : 
-                  newActivity.type === "Vet Visit" ? "🩺" : "🐾"
-          });
-          
-        if (error) throw error;
+        const newActivityItem = {
+          id: Date.now(),
+          type: newActivity.type,
+          pet_name: newActivity.petName,
+          duration: `${newActivity.duration} min`,
+          location: newActivity.location,
+          distance: newActivity.type === "Walk" ? "2.1 km" : null,
+          icon: newActivity.type === "Walk" ? "🦮" : 
+                newActivity.type === "Play" ? "🎾" : 
+                newActivity.type === "Training" ? "🏆" : 
+                newActivity.type === "Grooming" ? "🧼" : 
+                newActivity.type === "Vet Visit" ? "🩺" : "🐾",
+          date: new Date().toISOString()
+        };
+        
+        setActivities(prev => [newActivityItem, ...prev]);
+        setHasInsights(true);
         
         toast.success(`New ${newActivity.type} activity added`);
       }
-      
-      setHasInsights(true);
-      
-      fetchActivities();
       
       setIsNewActivityDialogOpen(false);
       setIsEditMode(false);
@@ -332,44 +299,37 @@ const TrackerPage = () => {
     }
   };
 
-  const handleAddGoal = async () => {
+  const handleAddGoal = () => {
     try {
-      if (!userId) {
-        toast.error("Please sign in to track goals");
-        return;
-      }
-      
       if (isEditMode) {
-        const { error } = await supabase
-          .from('pet_goals')
-          .update({
-            name: newGoal.name,
-            target: newGoal.target,
-            progress: newGoal.progress,
-            icon: newGoal.icon
-          })
-          .eq('id', currentEditId);
-          
-        if (error) throw error;
+        setGoals(prev => 
+          prev.map(goal => 
+            goal.id === currentEditId 
+              ? {
+                  ...goal,
+                  name: newGoal.name,
+                  target: newGoal.target,
+                  progress: newGoal.progress,
+                  icon: newGoal.icon
+                }
+              : goal
+          )
+        );
         
         toast.success("Goal updated successfully");
       } else {
-        const { error } = await supabase
-          .from('pet_goals')
-          .insert({
-            user_id: userId,
-            name: newGoal.name,
-            target: newGoal.target,
-            progress: newGoal.progress,
-            icon: newGoal.icon
-          });
-          
-        if (error) throw error;
+        const newGoalItem = {
+          id: Date.now(),
+          name: newGoal.name,
+          target: newGoal.target,
+          progress: newGoal.progress,
+          icon: newGoal.icon
+        };
+        
+        setGoals(prev => [...prev, newGoalItem]);
         
         toast.success("New goal added");
       }
-      
-      fetchGoals();
       
       setIsNewGoalDialogOpen(false);
       setIsEditMode(false);
@@ -386,48 +346,43 @@ const TrackerPage = () => {
     }
   };
 
-  const handleAddNote = async () => {
+  const handleAddNote = () => {
     try {
-      if (!userId) {
-        toast.error("Please sign in to add notes");
-        return;
-      }
-      
       const tags = newNote.content.match(/#\w+/g) 
         ? newNote.content.match(/#\w+/g).map(tag => tag.substring(1)) 
         : [];
       
       if (isEditMode) {
-        const { error } = await supabase
-          .from('pet_notes')
-          .update({
-            title: newNote.title,
-            content: newNote.content,
-            tags: tags,
-            image: newNote.image
-          })
-          .eq('id', currentEditId);
-          
-        if (error) throw error;
+        setNotes(prev => 
+          prev.map(note => 
+            note.id === currentEditId 
+              ? {
+                  ...note,
+                  title: newNote.title,
+                  content: newNote.content,
+                  tags: tags,
+                  image: newNote.image
+                }
+              : note
+          )
+        );
         
         toast.success("Note updated successfully");
       } else {
-        const { error } = await supabase
-          .from('pet_notes')
-          .insert({
-            user_id: userId,
-            title: newNote.title,
-            content: newNote.content,
-            tags: tags,
-            image: newNote.image
-          });
-          
-        if (error) throw error;
+        const newNoteItem = {
+          id: Date.now(),
+          title: newNote.title,
+          content: newNote.content,
+          tags: tags,
+          image: newNote.image,
+          date: new Date().toLocaleDateString(),
+          created_at: new Date().toISOString()
+        };
+        
+        setNotes(prev => [newNoteItem, ...prev]);
         
         toast.success("New note added");
       }
-      
-      fetchNotes();
       
       setIsNewNoteDialogOpen(false);
       setIsEditMode(false);
@@ -456,15 +411,8 @@ const TrackerPage = () => {
     setIsNewActivityDialogOpen(true);
   };
 
-  const handleDeleteActivity = async (id) => {
+  const handleDeleteActivity = (id) => {
     try {
-      const { error } = await supabase
-        .from('pet_activities')
-        .delete()
-        .eq('id', id);
-        
-      if (error) throw error;
-      
       setActivities(prev => prev.filter(activity => activity.id !== id));
       toast.info("Activity removed");
       
@@ -489,15 +437,8 @@ const TrackerPage = () => {
     setIsNewGoalDialogOpen(true);
   };
 
-  const handleDeleteGoal = async (id) => {
+  const handleDeleteGoal = (id) => {
     try {
-      const { error } = await supabase
-        .from('pet_goals')
-        .delete()
-        .eq('id', id);
-        
-      if (error) throw error;
-      
       setGoals(prev => prev.filter(goal => goal.id !== id));
       toast.info("Goal removed");
     } catch (error) {
@@ -518,15 +459,8 @@ const TrackerPage = () => {
     setIsNewNoteDialogOpen(true);
   };
 
-  const handleDeleteNote = async (id) => {
+  const handleDeleteNote = (id) => {
     try {
-      const { error } = await supabase
-        .from('pet_notes')
-        .delete()
-        .eq('id', id);
-        
-      if (error) throw error;
-      
       setNotes(prev => prev.filter(note => note.id !== id));
       toast.info("Note removed");
     } catch (error) {
