@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,18 +16,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
 
 const ProfilePage = () => {
-  const navigate = useNavigate();
-  const { user, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState("pets");
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isAddPetDialogOpen, setIsAddPetDialogOpen] = useState(false);
   const [editedUserData, setEditedUserData] = useState({
-    name: user?.user_metadata?.full_name || user?.email?.split('@')[0] || '',
-    avatarUrl: user?.user_metadata?.avatar_url || ''
+    name: 'Guest User',
+    avatarUrl: ''
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [petProfiles, setPetProfiles] = useState([]);
@@ -42,16 +39,6 @@ const ProfilePage = () => {
       setSelectedFile(file);
       const imageUrl = URL.createObjectURL(file);
       setEditedUserData({ ...editedUserData, avatarUrl: imageUrl });
-    }
-  };
-
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      navigate('/auth');
-      toast.success('Signed out successfully');
-    } catch (error) {
-      toast.error('Error signing out');
     }
   };
 
@@ -88,11 +75,6 @@ const ProfilePage = () => {
     setIsEditDialogOpen(false);
   };
 
-  if (!user) {
-    navigate('/auth');
-    return null;
-  }
-
   return (
     <div className="py-6 space-y-6">
       <div>
@@ -110,7 +92,7 @@ const ProfilePage = () => {
         </Avatar>
         <div>
           <h2 className="text-xl font-semibold">{editedUserData.name}</h2>
-          <p className="text-sm text-muted-foreground">Member since {new Date(user.created_at).toLocaleDateString()}</p>
+          <p className="text-sm text-muted-foreground">Guest User</p>
         </div>
         <Button variant="outline" size="sm" className="ml-auto" onClick={() => setIsEditDialogOpen(true)}>
           <Pencil size={14} className="mr-1" /> Edit Profile
@@ -179,16 +161,12 @@ const ProfilePage = () => {
             </CardHeader>
             <CardContent className="space-y-2">
               <div className="flex justify-between py-2 border-b">
-                <span className="text-muted-foreground">Email</span>
-                <span>{user.email}</span>
-              </div>
-              <div className="flex justify-between py-2 border-b">
                 <span className="text-muted-foreground">Name</span>
                 <span>{editedUserData.name}</span>
               </div>
               <div className="flex justify-between py-2">
                 <span className="text-muted-foreground">Member Since</span>
-                <span>{new Date(user.created_at).toLocaleDateString()}</span>
+                <span>Today</span>
               </div>
             </CardContent>
             <CardFooter>
@@ -197,12 +175,6 @@ const ProfilePage = () => {
               </Button>
             </CardFooter>
           </Card>
-          
-          <div className="pt-4">
-            <Button variant="destructive" className="w-full" onClick={handleSignOut}>
-              <LogOut className="mr-2 h-4 w-4" /> Sign Out
-            </Button>
-          </div>
         </TabsContent>
       </Tabs>
 
