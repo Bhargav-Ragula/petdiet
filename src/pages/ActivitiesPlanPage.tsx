@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
-import { Loader2, ChevronLeft, Calendar } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2, ChevronLeft, Calendar, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
 const ActivitiesPlanPage = () => {
@@ -80,18 +80,18 @@ const ActivitiesPlanPage = () => {
       <CardHeader>
         <div className="flex items-center mb-2">
           <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="mr-2">
-            <ChevronLeft size={18} />
+            <ChevronLeft size={20} />
           </Button>
-          <CardTitle>Create Pet Activities Plan</CardTitle>
+          <CardTitle className="text-2xl">Create Pet Activities Plan</CardTitle>
         </div>
-        <CardDescription>
+        <CardDescription className="text-lg">
           Tell us about your pet to generate a customized activities plan
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="petName">Pet Name</Label>
+            <Label htmlFor="petName" className="text-base">Pet Name</Label>
             <Input 
               id="petName" 
               placeholder="Enter your pet's name" 
@@ -101,7 +101,7 @@ const ActivitiesPlanPage = () => {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="petType">Pet Type</Label>
+            <Label htmlFor="petType" className="text-base">Pet Type</Label>
             <Select value={petType} onValueChange={setPetType}>
               <SelectTrigger id="petType">
                 <SelectValue placeholder="Select pet type" />
@@ -117,7 +117,7 @@ const ActivitiesPlanPage = () => {
         
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="petBreed">Breed</Label>
+            <Label htmlFor="petBreed" className="text-base">Breed</Label>
             <Input 
               id="petBreed" 
               placeholder="Enter breed" 
@@ -127,7 +127,7 @@ const ActivitiesPlanPage = () => {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="petAge">Age</Label>
+            <Label htmlFor="petAge" className="text-base">Age</Label>
             <Input 
               id="petAge" 
               placeholder="Years" 
@@ -171,11 +171,11 @@ const ActivitiesPlanPage = () => {
       <CardHeader>
         <div className="flex items-center mb-2">
           <Button variant="ghost" size="icon" onClick={() => setStep(1)} className="mr-2">
-            <ChevronLeft size={18} />
+            <ChevronLeft size={20} />
           </Button>
-          <CardTitle>Activity Preferences</CardTitle>
+          <CardTitle className="text-2xl">Activity Preferences</CardTitle>
         </div>
-        <CardDescription>
+        <CardDescription className="text-lg">
           Tell us about your activity preferences
         </CardDescription>
       </CardHeader>
@@ -253,78 +253,96 @@ const ActivitiesPlanPage = () => {
   const renderSuccess = () => (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle className="text-center flex flex-col items-center">
+        <CardTitle className="text-center flex flex-col items-center text-2xl">
           <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mb-4">
             <Calendar size={32} className="text-primary" />
           </div>
           Activities Plan Generated!
         </CardTitle>
-        <CardDescription className="text-center">
-          Your custom activities plan for {petName} is ready
+        <CardDescription className="text-center text-lg">
+          Your custom activities plan for {petName || "your pet"} is ready
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="border rounded-lg p-4 space-y-4">
-          <h3 className="font-medium text-lg">Daily Activities</h3>
-          <div className="space-y-2">
-            <div className="flex items-start space-x-2">
-              <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm">
+        <Alert variant="warning" className="bg-amber-50 border-amber-200">
+          <AlertTriangle className="h-5 w-5 text-amber-600" />
+          <AlertDescription className="text-base">
+            <strong>AI-Generated Content:</strong> This activities plan was created by AI and should be adapted to your pet's 
+            specific needs and abilities. Always monitor your pet during new activities and consult with your veterinarian 
+            about appropriate exercise levels.
+          </AlertDescription>
+        </Alert>
+      
+        <div className="border rounded-lg p-5 space-y-4">
+          <h3 className="font-medium text-xl">Daily Activities</h3>
+          <div className="space-y-3">
+            <div className="flex items-start space-x-3">
+              <div className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-base">
                 1
               </div>
-              <p>Morning: 15-minute walk to explore and exercise</p>
+              <div className="pt-1">
+                <p className="text-base">Morning: 15-minute walk to explore and exercise</p>
+                <p className="text-sm text-muted-foreground mt-1">Example: Morning route through the neighborhood allowing sniffing time at bushes and trees for mental stimulation</p>
+              </div>
             </div>
-            <div className="flex items-start space-x-2">
-              <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm">
+            <div className="flex items-start space-x-3">
+              <div className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-base">
                 2
               </div>
-              <p>Midday: 10-minute fetch or tug game for mental stimulation</p>
+              <div className="pt-1">
+                <p className="text-base">Midday: 10-minute fetch or tug game for mental stimulation</p>
+                <p className="text-sm text-muted-foreground mt-1">Example: Use a plush squeaky toy for indoor tug-of-war or a rubber ball for backyard fetch, alternating between toys to maintain interest</p>
+              </div>
             </div>
-            <div className="flex items-start space-x-2">
-              <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm">
+            <div className="flex items-start space-x-3">
+              <div className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-base">
                 3
               </div>
-              <p>Evening: 20-minute leisurely walk with sniffing time</p>
+              <div className="pt-1">
+                <p className="text-base">Evening: 20-minute leisurely walk with sniffing time</p>
+                <p className="text-sm text-muted-foreground mt-1">Example: Evening route through a local park or quiet streets, allowing your pet to set the pace and explore scents</p>
+              </div>
             </div>
           </div>
         </div>
         
-        <div className="border rounded-lg p-4">
-          <h3 className="font-medium mb-2">Weekly Activities</h3>
-          <div className="space-y-2">
-            <div className="flex justify-between border-b pb-1">
-              <span className="font-medium">Monday & Thursday:</span>
-              <span>Park visit with fetch games</span>
+        <div className="border rounded-lg p-5">
+          <h3 className="font-medium mb-3 text-xl">Weekly Activities</h3>
+          <div className="space-y-3">
+            <div className="flex justify-between border-b pb-2">
+              <span className="font-medium text-base">Monday & Thursday:</span>
+              <span className="text-base">Park visit with fetch games using a tennis ball launcher</span>
             </div>
-            <div className="flex justify-between border-b pb-1">
-              <span className="font-medium">Tuesday & Friday:</span>
-              <span>Enrichment toys and puzzles</span>
+            <div className="flex justify-between border-b pb-2">
+              <span className="font-medium text-base">Tuesday & Friday:</span>
+              <span className="text-base">Enrichment toys like treat-dispensing puzzle balls or snuffle mats</span>
             </div>
-            <div className="flex justify-between border-b pb-1">
-              <span className="font-medium">Wednesday:</span>
-              <span>Training combined with play</span>
+            <div className="flex justify-between border-b pb-2">
+              <span className="font-medium text-base">Wednesday:</span>
+              <span className="text-base">Training combined with play using treats hidden throughout a room</span>
             </div>
             <div className="flex justify-between">
-              <span className="font-medium">Weekend:</span>
-              <span>Longer adventure walk or hike</span>
+              <span className="font-medium text-base">Weekend:</span>
+              <span className="text-base">Longer adventure walk or hike on pet-friendly trails</span>
             </div>
           </div>
         </div>
         
-        <div className="border rounded-lg p-4">
-          <h3 className="font-medium mb-2">Indoor Activity Ideas</h3>
-          <ul className="list-disc pl-5 space-y-1">
-            <li>Hide and seek with treats or toys</li>
-            <li>DIY obstacle course using furniture</li>
-            <li>Puzzle toys filled with treats</li>
-            <li>Indoor fetch in a hallway</li>
+        <div className="border rounded-lg p-5">
+          <h3 className="font-medium mb-3 text-xl">Indoor Activity Ideas</h3>
+          <ul className="list-disc pl-6 space-y-2">
+            <li className="text-base">Hide and seek with treats: Hide treats throughout a room and encourage your pet to find them all</li>
+            <li className="text-base">DIY obstacle course: Use sofa cushions to create jumps, chairs to weave through, and tunnels made from blankets</li>
+            <li className="text-base">Puzzle toys: Kong toys filled with frozen peanut butter, treat-dispensing balls, or snuffle mats made from fleece strips</li>
+            <li className="text-base">Indoor fetch: Roll balls down a hallway or use soft toys for gentle indoor retrieve games</li>
           </ul>
         </div>
       </CardContent>
       <CardFooter className="flex flex-col space-y-3">
-        <Button className="w-full" onClick={() => navigate("/pet-care-plan?type=activities")}>
+        <Button className="w-full text-base" onClick={() => navigate("/pet-care-plan?type=activities")}>
           View Full Activities Plan
         </Button>
-        <Button variant="outline" className="w-full" onClick={() => navigate("/")}>
+        <Button variant="outline" className="w-full text-base" onClick={() => navigate("/")}>
           Back to Home
         </Button>
       </CardFooter>
@@ -334,9 +352,9 @@ const ActivitiesPlanPage = () => {
   const renderLoading = () => (
     <Card className="w-full p-8">
       <div className="flex flex-col items-center justify-center space-y-4">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="text-lg">Creating your pet's activities plan...</p>
-        <p className="text-sm text-muted-foreground text-center">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        <p className="text-xl">Creating your pet's activities plan...</p>
+        <p className="text-lg text-muted-foreground text-center">
           Our AI is designing a tailored activity schedule based on your pet's energy level and preferences
         </p>
       </div>

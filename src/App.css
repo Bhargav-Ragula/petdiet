@@ -1,3 +1,4 @@
+
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -39,4 +40,52 @@
 
 .read-the-docs {
   color: #888;
+}
+
+/* Add improved text sizing */
+h1 {
+  font-size: 2rem;
+  line-height: 1.2;
+  margin-bottom: 1rem;
+}
+
+h2 {
+  font-size: 1.75rem;
+  line-height: 1.2;
+  margin-bottom: 0.75rem;
+}
+
+h3 {
+  font-size: 1.5rem;
+  line-height: 1.3;
+  margin-bottom: 0.75rem;
+}
+
+p, li, label, input, button {
+  font-size: 1.125rem;
+  line-height: 1.5;
+}
+
+.card-title {
+  font-size: 1.5rem !important;
+}
+
+.card-description {
+  font-size: 1.125rem !important;
+}
+
+.text-base {
+  font-size: 1.125rem !important;
+}
+
+.text-lg {
+  font-size: 1.25rem !important;
+}
+
+.text-xl {
+  font-size: 1.5rem !important;
+}
+
+.text-2xl {
+  font-size: 1.75rem !important;
 }
