@@ -264,7 +264,7 @@ const ActivitiesPlanPage = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <Alert variant="warning" className="bg-amber-50 border-amber-200">
+        <Alert className="bg-amber-50 border-amber-200">
           <AlertTriangle className="h-5 w-5 text-amber-600" />
           <AlertDescription className="text-base">
             <strong>AI-Generated Content:</strong> This activities plan was created by AI and should be adapted to your pet's 
