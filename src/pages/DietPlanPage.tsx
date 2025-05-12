@@ -63,6 +63,60 @@ const ageGroups = [
   { value: "senior", label: "Senior (7+ years)" },
 ];
 
+// Define the food option types for better type safety
+type DogFoodOptions = {
+  proteins: string[];
+  vegetables: string[];
+  fruits: string[];
+  grains: string[];
+  treats: string[];
+};
+
+type CatFoodOptions = {
+  proteins: string[];
+  vegetables: string[];
+  supplements: string[];
+  treats: string[];
+};
+
+type RabbitFoodOptions = {
+  hays: string[];
+  vegetables: string[];
+  fruits: string[];
+  pellets: string[];
+};
+
+type BirdFoodOptions = {
+  seeds: string[];
+  fruits: string[];
+  vegetables: string[];
+  protein: string[];
+};
+
+type HamsterFoodOptions = {
+  seeds: string[];
+  vegetables: string[];
+  fruits: string[];
+  protein: string[];
+  commercial: string[];
+};
+
+type OtherFoodOptions = {
+  safe_foods: string[];
+  supplements: string[];
+  treats: string[];
+};
+
+// Combined food options type
+type FoodOptions = {
+  dog: DogFoodOptions;
+  cat: CatFoodOptions;
+  rabbit: RabbitFoodOptions;
+  bird: BirdFoodOptions;
+  hamster: HamsterFoodOptions;
+  other: OtherFoodOptions;
+};
+
 const DietPlanPage = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
@@ -88,7 +142,7 @@ const DietPlanPage = () => {
     const getRandomElement = (array: string[]) => array[Math.floor(Math.random() * array.length)];
     
     // Define example food options based on pet type
-    const foodOptions = {
+    const foodOptions: FoodOptions = {
       dog: {
         proteins: ['lean chicken breast', 'ground turkey', 'salmon', 'lean beef', 'eggs', 'sardines in water', 'cottage cheese'],
         vegetables: ['steamed broccoli', 'carrots', 'green beans', 'sweet potatoes', 'pumpkin', 'spinach', 'zucchini'],
@@ -129,7 +183,7 @@ const DietPlanPage = () => {
     };
     
     // Generate specific meal plans based on pet type and other factors
-    const petType = values.petType.toLowerCase() as keyof typeof foodOptions;
+    const petType = values.petType.toLowerCase() as keyof FoodOptions;
     const petTypeData = foodOptions[petType] || foodOptions.other;
     const petName = values.petName;
     const activityLevel = values.activityLevel;
@@ -141,15 +195,16 @@ const DietPlanPage = () => {
     
     // Create unique meal plans based on pet type
     if (petType === 'dog') {
+      const dogData = petTypeData as DogFoodOptions;
       // Filter out allergens if specified
-      const safeProteins = petTypeData.proteins.filter(p => !allergies.includes(p.toLowerCase()));
-      const safeVeggies = petTypeData.vegetables.filter(v => !allergies.includes(v.toLowerCase()));
-      const safeGrains = petTypeData.grains.filter(g => !allergies.includes(g.toLowerCase()));
+      const safeProteins = dogData.proteins.filter(p => !allergies.includes(p.toLowerCase()));
+      const safeVeggies = dogData.vegetables.filter(v => !allergies.includes(v.toLowerCase()));
+      const safeGrains = dogData.grains.filter(g => !allergies.includes(g.toLowerCase()));
       
       breakfast = `${getRandomElement(safeProteins)} (${activityLevel > 3 ? '3/4' : '1/2'} cup) with ${getRandomElement(safeVeggies)} (1/4 cup) and a small amount of ${getRandomElement(safeGrains)}`;
       lunch = activityLevel > 3 ? `Small portion of ${getRandomElement(safeProteins)} (1/3 cup)` : "No midday meal needed for less active dogs";
       dinner = `${getRandomElement(safeProteins)} (${activityLevel > 3 ? '3/4' : '1/2'} cup) mixed with ${getRandomElement(safeVeggies)} and ${getRandomElement(safeVeggies)} (1/4 cup total)`;
-      snacks = `${getRandomElement(petTypeData.treats)} as occasional treats, limiting to ${activityLevel > 3 ? '2-3' : '1-2'} small treats per day`;
+      snacks = `${getRandomElement(dogData.treats)} as occasional treats, limiting to ${activityLevel > 3 ? '2-3' : '1-2'} small treats per day`;
       supplements = "Omega-3 fatty acid supplement (for coat health), joint supplement for larger breeds";
       
       nutritionalBreakdown = {
@@ -170,13 +225,14 @@ const DietPlanPage = () => {
       };
     } 
     else if (petType === 'cat') {
-      const safeProteins = petTypeData.proteins.filter(p => !allergies.includes(p.toLowerCase()));
+      const catData = petTypeData as CatFoodOptions;
+      const safeProteins = catData.proteins.filter(p => !allergies.includes(p.toLowerCase()));
       
       breakfast = `${getRandomElement(safeProteins)} (${activityLevel > 3 ? '3' : '2'} tablespoons) with premium wet food`;
       lunch = activityLevel > 3 ? `Small portion of ${getRandomElement(safeProteins)} (2 tablespoons)` : "No midday meal for less active cats";
       dinner = `Premium cat food with ${getRandomElement(safeProteins)} (${activityLevel > 3 ? '3' : '2'} tablespoons)`;
-      snacks = `${getRandomElement(petTypeData.treats)} as occasional treats, not exceeding 10% of daily caloric intake`;
-      supplements = `${getRandomElement(petTypeData.supplements)} as recommended by veterinarian`;
+      snacks = `${getRandomElement(catData.treats)} as occasional treats, not exceeding 10% of daily caloric intake`;
+      supplements = `${getRandomElement(catData.supplements)} as recommended by veterinarian`;
       
       nutritionalBreakdown = {
         protein: Math.min(40 + (activityLevel * 2), 50),
@@ -196,13 +252,14 @@ const DietPlanPage = () => {
       };
     }
     else if (petType === 'rabbit') {
-      const safeHays = petTypeData.hays.filter(h => !allergies.includes(h.toLowerCase()));
-      const safeVeggies = petTypeData.vegetables.filter(v => !allergies.includes(v.toLowerCase()));
+      const rabbitData = petTypeData as RabbitFoodOptions;
+      const safeHays = rabbitData.hays.filter(h => !allergies.includes(h.toLowerCase()));
+      const safeVeggies = rabbitData.vegetables.filter(v => !allergies.includes(v.toLowerCase()));
       
       breakfast = `Unlimited ${getRandomElement(safeHays)} with ${getRandomElement(safeVeggies)} and ${getRandomElement(safeVeggies)} (1 cup total of vegetables)`;
       lunch = `Fresh ${getRandomElement(safeHays)} and water`;
-      dinner = `${getRandomElement(safeVeggies)}, ${getRandomElement(safeVeggies)}, and ${getRandomElement(safeVeggies)} (1 cup total) with a small amount of ${getRandomElement(petTypeData.pellets)}`;
-      snacks = `Small piece of ${getRandomElement(petTypeData.fruits)} (limit to 1-2 tablespoons of fruit daily)`;
+      dinner = `${getRandomElement(safeVeggies)}, ${getRandomElement(safeVeggies)}, and ${getRandomElement(safeVeggies)} (1 cup total) with a small amount of ${getRandomElement(rabbitData.pellets)}`;
+      snacks = `Small piece of ${getRandomElement(rabbitData.fruits)} (limit to 1-2 tablespoons of fruit daily)`;
       supplements = "Occasional herbs like mint or basil, wooden chew toys for dental health";
       
       nutritionalBreakdown = {
@@ -223,13 +280,14 @@ const DietPlanPage = () => {
       };
     }
     else if (petType === 'bird') {
-      const safeSeeds = petTypeData.seeds.filter(s => !allergies.includes(s.toLowerCase()));
-      const safeVeggies = petTypeData.vegetables.filter(v => !allergies.includes(v.toLowerCase()));
-      const safeFruits = petTypeData.fruits.filter(f => !allergies.includes(f.toLowerCase()));
+      const birdData = petTypeData as BirdFoodOptions;
+      const safeSeeds = birdData.seeds.filter(s => !allergies.includes(s.toLowerCase()));
+      const safeVeggies = birdData.vegetables.filter(v => !allergies.includes(v.toLowerCase()));
+      const safeFruits = birdData.fruits.filter(f => !allergies.includes(f.toLowerCase()));
       
       breakfast = `Mix of ${getRandomElement(safeSeeds)} and ${getRandomElement(safeSeeds)} (1 teaspoon) with fresh ${getRandomElement(safeVeggies)}`;
       lunch = `Small piece of ${getRandomElement(safeFruits)} or ${getRandomElement(safeVeggies)}`;
-      dinner = `Bird pellets supplemented with ${getRandomElement(safeVeggies)} and small amount of ${getRandomElement(petTypeData.protein)}`;
+      dinner = `Bird pellets supplemented with ${getRandomElement(safeVeggies)} and small amount of ${getRandomElement(birdData.protein)}`;
       snacks = `Millet spray or small amount of ${getRandomElement(safeFruits)}`;
       supplements = "Cuttlebone for calcium, specialized bird vitamins if recommended by avian vet";
       
@@ -250,10 +308,11 @@ const DietPlanPage = () => {
       };
     }
     else if (petType === 'hamster') {
-      breakfast = `Commercial hamster food mix (1 tablespoon) with ${getRandomElement(petTypeData.seeds)} (few pieces)`;
-      lunch = `Small piece of ${getRandomElement(petTypeData.vegetables)} or ${getRandomElement(petTypeData.fruits)}`;
-      dinner = `${getRandomElement(petTypeData.commercial)} (1 tablespoon) with tiny amount of ${getRandomElement(petTypeData.protein)}`;
-      snacks = `Occasional ${getRandomElement(petTypeData.seeds)} or small piece of ${getRandomElement(petTypeData.fruits)}`;
+      const hamsterData = petTypeData as HamsterFoodOptions;
+      breakfast = `Commercial hamster food mix (1 tablespoon) with ${getRandomElement(hamsterData.seeds)} (few pieces)`;
+      lunch = `Small piece of ${getRandomElement(hamsterData.vegetables)} or ${getRandomElement(hamsterData.fruits)}`;
+      dinner = `${getRandomElement(hamsterData.commercial)} (1 tablespoon) with tiny amount of ${getRandomElement(hamsterData.protein)}`;
+      snacks = `Occasional ${getRandomElement(hamsterData.seeds)} or small piece of ${getRandomElement(hamsterData.fruits)}`;
       supplements = "Chew sticks for dental health";
       
       nutritionalBreakdown = {
@@ -273,12 +332,13 @@ const DietPlanPage = () => {
       };
     }
     else {
+      const otherData = petTypeData as OtherFoodOptions;
       // Generic plan for other pet types
       breakfast = "Species-appropriate morning meal";
       lunch = "Light midday nutrition if needed for species";
       dinner = "Species-appropriate evening meal";
-      snacks = "Occasional species-appropriate treats";
-      supplements = "Consult with exotic pet veterinarian for specific supplement needs";
+      snacks = `${getRandomElement(otherData.treats)}`;
+      supplements = `${getRandomElement(otherData.supplements)}`;
       
       nutritionalBreakdown = {
         protein: 25,
@@ -311,14 +371,27 @@ const DietPlanPage = () => {
         ]
       });
       
-      foodRecommendations.push({
-        type: 'Homemade Options',
-        options: [
-          `${getRandomElement(petTypeData.proteins)} with ${getRandomElement(petTypeData.vegetables)} and ${petType === 'dog' ? getRandomElement(petTypeData.grains) : 'small amount of vegetables'}`,
-          `${getRandomElement(petTypeData.proteins)} and ${getRandomElement(petTypeData.proteins)} mix with essential supplements`,
-          `Balanced ${getRandomElement(petTypeData.proteins)} patties with vegetables`
-        ]
-      });
+      if (petType === 'dog') {
+        const dogData = petTypeData as DogFoodOptions;
+        foodRecommendations.push({
+          type: 'Homemade Options',
+          options: [
+            `${getRandomElement(dogData.proteins)} with ${getRandomElement(dogData.vegetables)} and ${getRandomElement(dogData.grains)}`,
+            `${getRandomElement(dogData.proteins)} and ${getRandomElement(dogData.proteins)} mix with essential supplements`,
+            `Balanced ${getRandomElement(dogData.proteins)} patties with vegetables`
+          ]
+        });
+      } else if (petType === 'cat') {
+        const catData = petTypeData as CatFoodOptions;
+        foodRecommendations.push({
+          type: 'Homemade Options',
+          options: [
+            `${getRandomElement(catData.proteins)} with ${getRandomElement(catData.vegetables)} and small amount of vegetables`,
+            `${getRandomElement(catData.proteins)} and ${getRandomElement(catData.proteins)} mix with essential supplements`,
+            `Balanced ${getRandomElement(catData.proteins)} patties with minimal vegetables`
+          ]
+        });
+      }
     } else {
       foodRecommendations.push({
         type: 'Recommended Foods',
