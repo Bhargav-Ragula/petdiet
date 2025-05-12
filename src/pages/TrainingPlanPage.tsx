@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Loader2, ChevronLeft, Dumbbell, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
@@ -223,11 +223,14 @@ const TrainingPlanPage = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <Alert className="bg-amber-50 border-amber-200">
+        <Alert variant="warning" className="border-2 border-amber-300 bg-amber-50">
           <AlertTriangle className="h-5 w-5 text-amber-600" />
-          <AlertDescription className="text-base">
-            <strong>AI-Generated Content:</strong> This training plan was created by AI and should be reviewed by a professional 
-            trainer before implementation. Every pet is unique and may require personalized adaptations.
+          <AlertDescription className="text-base font-medium">
+            <AlertTitle className="text-amber-800 mb-1">IMPORTANT DISCLAIMER</AlertTitle>
+            This training plan is completely generated using AI and should be used with caution. 
+            Always consult with a professional trainer or veterinarian before implementing any 
+            recommendations. Every pet has unique needs that may not be fully addressed by AI-generated advice. 
+            Follow this plan at your own risk.
           </AlertDescription>
         </Alert>
         

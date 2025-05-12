@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Loader2, ChevronLeft, Scissors } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Loader2, ChevronLeft, Scissors, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
 const GroomingPlanPage = () => {
@@ -236,6 +236,17 @@ const GroomingPlanPage = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        <Alert variant="warning" className="border-2 border-amber-300 bg-amber-50">
+          <AlertTriangle className="h-5 w-5 text-amber-600" />
+          <AlertDescription className="text-base font-medium">
+            <AlertTitle className="text-amber-800 mb-1">IMPORTANT DISCLAIMER</AlertTitle>
+            This grooming plan is completely generated using AI and should be used with caution. 
+            Please consult with a professional pet groomer or veterinarian before implementing any 
+            recommendations. Follow this plan at your own risk, as every pet has unique needs that 
+            may not be fully addressed by AI-generated advice.
+          </AlertDescription>
+        </Alert>
+
         <div className="border rounded-lg p-4 space-y-4">
           <h3 className="font-medium text-lg">Regular Grooming Routine</h3>
           <div className="space-y-2">

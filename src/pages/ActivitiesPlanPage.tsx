@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Loader2, ChevronLeft, Calendar, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
@@ -264,12 +264,14 @@ const ActivitiesPlanPage = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <Alert className="bg-amber-50 border-amber-200">
+        <Alert variant="warning" className="border-2 border-amber-300 bg-amber-50">
           <AlertTriangle className="h-5 w-5 text-amber-600" />
-          <AlertDescription className="text-base">
-            <strong>AI-Generated Content:</strong> This activities plan was created by AI and should be adapted to your pet's 
-            specific needs and abilities. Always monitor your pet during new activities and consult with your veterinarian 
-            about appropriate exercise levels.
+          <AlertDescription className="text-base font-medium">
+            <AlertTitle className="text-amber-800 mb-1">IMPORTANT DISCLAIMER</AlertTitle>
+            This activities plan is completely generated using AI and should be used with caution. 
+            Always monitor your pet during new activities and consult with your veterinarian about 
+            appropriate exercise levels. Every pet has unique physical capabilities and limitations 
+            that may not be fully addressed by AI-generated advice. Follow this plan at your own risk.
           </AlertDescription>
         </Alert>
       

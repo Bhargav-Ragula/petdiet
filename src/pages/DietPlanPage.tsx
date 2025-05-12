@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -22,7 +21,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import { ChevronLeft, Loader2 } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ChevronLeft, Loader2, AlertTriangle } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -293,6 +293,17 @@ const DietPlanPage = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        <Alert variant="warning" className="border-2 border-amber-300 bg-amber-50">
+          <AlertTriangle className="h-5 w-5 text-amber-600" />
+          <AlertDescription className="text-base font-medium">
+            <AlertTitle className="text-amber-800 mb-1">IMPORTANT DISCLAIMER</AlertTitle>
+            This diet plan is completely generated using AI and should be used with caution. 
+            Before implementing any dietary changes, please consult with a veterinarian or pet nutrition specialist. 
+            Every pet has unique nutritional needs that may not be fully addressed by AI-generated advice. 
+            Follow this plan at your own risk.
+          </AlertDescription>
+        </Alert>
+
         <div className="space-y-2">
           <h3 className="font-medium">Daily Feeding Recommendations</h3>
           <div className="bg-muted p-3 rounded-md">
