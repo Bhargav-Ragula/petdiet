@@ -7,7 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import MainLayout from "./components/layout/MainLayout";
 import DiscoverPage from "./pages/DiscoverPage";
 import TrackerPage from "./pages/TrackerPage";
-import ProfilePage from "./pages/ProfilePage";
+import SavedPlansPage from "./pages/SavedPlansPage";
 import QuizPage from "./pages/QuizPage";
 import DietPlanPage from "./pages/DietPlanPage";
 import PetCarePlanPage from "./pages/PetCarePlanPage";
@@ -32,7 +32,7 @@ const App = () => {
             <Route path="/home" element={<MainLayout><Index /></MainLayout>} />
             <Route path="/tracker" element={<MainLayout><TrackerPage /></MainLayout>} />
             <Route path="/quiz" element={<MainLayout><QuizPage /></MainLayout>} />
-            <Route path="/profile" element={<MainLayout><ProfilePage /></MainLayout>} />
+            <Route path="/saved-plans" element={<MainLayout><SavedPlansPage /></MainLayout>} />
             <Route path="/diet-plan" element={<MainLayout><DietPlanPage /></MainLayout>} />
             <Route path="/pet-care-plan" element={<MainLayout><PetCarePlanPage /></MainLayout>} />
             <Route path="/training-plan" element={<MainLayout><TrainingPlanPage /></MainLayout>} />

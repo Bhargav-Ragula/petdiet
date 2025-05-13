@@ -1,5 +1,5 @@
 
-import { Home, Activity, Brain, User } from "lucide-react";
+import { Home, Activity, Brain, BookmarkCheck } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 const BottomNavbar = () => {
@@ -13,7 +13,7 @@ const BottomNavbar = () => {
     { icon: Home, label: "Discover", path: "/" },
     { icon: Activity, label: "Tracker", path: "/tracker" },
     { icon: Brain, label: "Quiz", path: "/quiz" },
-    { icon: User, label: "Profile", path: "/profile" },
+    { icon: BookmarkCheck, label: "Saved Plans", path: "/saved-plans" },
   ];
 
   return (
