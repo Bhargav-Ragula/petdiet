@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -246,14 +245,10 @@ const PetCarePlanPage = () => {
         </Card>
       ) : carePlan && (
         <>
-          <Alert variant="warning" className="border-2 border-amber-300 bg-amber-50">
-            <AlertTriangle className="h-5 w-5 text-amber-600" />
-            <AlertDescription className="text-base font-medium">
-              <AlertTitle className="text-amber-800 mb-1">IMPORTANT DISCLAIMER</AlertTitle>
-              This pet care plan is completely generated using AI and should be used with caution.
-              Always consult with a professional veterinarian or pet care specialist before implementing
-              any recommendations. Every pet has unique needs that may not be fully addressed by AI-generated advice.
-              Follow this plan at your own risk.
+          <Alert variant="brief" className="border border-amber-300">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription className="text-sm font-medium">
+              AI-generated plan. Consult a professional before implementation.
             </AlertDescription>
           </Alert>
           
